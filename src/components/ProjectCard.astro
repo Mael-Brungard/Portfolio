@@ -1,0 +1,14 @@
+---
+import Tags from './Tags.astro';
+import type { Project } from '../lib/db';
+interface Props { p: Project; i?: number }
+const { p, i = 0 } = Astro.props;
+---
+<li data-card data-skills={p.tags.join('|')} data-context={p.contextId} class="reveal" style={`--d:${i + 2}`}>
+  <a href={`/projets/${p.slug}`} class="panel group flex h-full flex-col items-center gap-3 p-5 text-center transition hover:-translate-y-1 hover:bg-tonique/10 hover:shadow-[0_10px_30px_rgba(0,0,0,.4)]">
+    <img src={p.logo} alt="" width="200" height="200" loading="lazy" class="h-[12.5rem] w-[12.5rem] object-contain transition duration-300 group-hover:scale-105" />
+    <Tags tags={p.tags} class="justify-center text-lg" />
+    <h3 class="font-titre text-xl italic leading-tight lg:text-2xl">{p.title}</h3>
+    <p class="mt-auto font-tag text-xl font-semibold lg:text-2xl">{p.context}</p>
+  </a>
+</li>

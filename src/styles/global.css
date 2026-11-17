@@ -1,0 +1,107 @@
+@import "tailwindcss";
+
+/* Tokens de la maquette Figma */
+@theme {
+  --color-dominant: #332013;
+  --color-header: #1f130b;
+  --color-secondaire: #f2f1df;
+  --color-tonique: #e6c280;
+  --font-titre: "Emblema One", Georgia, serif;
+  --font-tag: "Idiqlat", "Cormorant Garamond", Georgia, serif; /* Idiqlat n'est pas libre : Cormorant en substitut */
+  --font-corps: "Inter", system-ui, sans-serif;
+}
+
+/* Transition douce entre pages (Chrome / Safari 18.2+), y compris dans l'écran 3D */
+@view-transition { navigation: auto; }
+::view-transition-old(root) { animation: 180ms ease-in both fade-out; }
+::view-transition-new(root) { animation: 280ms ease-out both fade-in; }
+@keyframes fade-out { to { opacity: 0; filter: brightness(1.6); } }
+@keyframes fade-in { from { opacity: 0; filter: brightness(1.6); } }
+
+@layer base {
+  html { background: var(--color-header); scroll-behavior: smooth; scroll-padding-top: calc(var(--header-h, 5rem) + 4.5rem); }
+  /* Maquette dessinée en 1920 px : tout est en rem, la racine suit la largeur de la fenêtre (16 px à 1920, jamais < 12 px).
+     Dans l'écran 3D (iframe de 1920 px) le rendu est donc identique à la maquette. */
+  @media (min-width: 64rem) { html { font-size: clamp(12px, 0.8334vw, 16px); } }
+  body { @apply bg-dominant font-corps text-secondaire antialiased; }
+  :focus-visible { outline: 2px solid var(--color-tonique); outline-offset: 3px; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+  }
+}
+
+/* Composants : @utility pour pouvoir les combiner avec @apply et les variants (hover:, aria-selected:…) */
+@utility panel { @apply relative border border-tonique bg-black/20 shadow-[inset_0_0_20px_rgba(0,0,0,.25)]; }
+@utility gradient-gold {
+  background-image: linear-gradient(rgba(0,0,0,.2), rgba(0,0,0,.2)),
+    linear-gradient(208deg, #997643 0%, #795932 25%, var(--color-dominant) 100%);
+}
+@utility btn {
+  @apply gradient-gold inline-flex items-center justify-center rounded-[10px] border border-tonique px-5 py-2.5 font-titre text-xl text-secondaire transition hover:-translate-y-0.5 hover:brightness-125 lg:text-2xl;
+}
+@utility btn-sm {
+  @apply gradient-gold inline-flex items-center justify-center rounded-[10px] border border-tonique px-4 py-1.5 font-titre text-base italic text-secondaire transition hover:-translate-y-0.5 hover:brightness-125 lg:text-lg;
+}
+@utility pill {
+  @apply cursor-pointer rounded-full border border-tonique/80 bg-black/20 px-3 py-0.5 text-center font-tag text-lg text-secondaire transition hover:bg-tonique/20 aria-pressed:bg-tonique aria-pressed:text-header;
+}
+@utility snav {
+  @apply relative z-10 cursor-pointer whitespace-nowrap border border-tonique bg-black/20 px-4 py-1 text-center font-semibold text-secondaire transition hover:bg-tonique/15 aria-[current=true]:gradient-gold lg:px-8;
+}
+@utility rich { & strong { @apply font-bold text-tonique; } }
+@utility h-section { @apply mb-2 font-titre text-xl italic lg:text-2xl; }
+@utility field { @apply w-full border border-tonique/80 bg-dominant px-5 py-2.5 text-secondaire placeholder:text-secondaire/70 focus:bg-header; font-size: max(1rem, 15px); }
+
+/* Rayures dorées des coins (motif de la maquette) */
+@utility stripes {
+  position: relative; isolation: isolate; overflow: clip;
+  &::before, &::after {
+    content: ""; position: absolute; z-index: -1; pointer-events: none;
+    width: min(42vw, 560px); aspect-ratio: 1;
+    background: repeating-linear-gradient(35deg, transparent 0 13px, rgb(230 194 128 / .85) 13px 16px);
+  }
+  &::before { left: 0; bottom: 0; mask-image: linear-gradient(to top right, #000, transparent 65%); }
+  &::after { right: 0; top: 0; mask-image: linear-gradient(to bottom left, #000, transparent 65%); }
+}
+
+/* Révélation ligne par ligne du faux éditeur de code */
+@utility line { display: block; white-space: pre; animation: reveal .7s steps(32) both; animation-delay: calc(var(--i) * .32s + .3s); }
+@keyframes reveal { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@utility caret { display: inline-block; width: .6ch; height: 1.1em; background: var(--color-tonique); vertical-align: text-bottom; animation: blink 1s steps(1) infinite; }
+@keyframes blink { 50% { opacity: 0; } }
+
+/* Grain & vignette de la scène 3D */
+@utility grain {
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  opacity: .06; mix-blend-mode: overlay;
+}
+@utility vignette { background: radial-gradient(ellipse at center, transparent 50%, rgba(15,8,3,.7) 100%); }
+
+/* ───────── Animations de navigation ───────── */
+html.embed .embed-hide { display: none; }
+
+/* Rideau doré : se retire à l'arrivée sur la page, se referme au départ (cf. scripts/page.ts) */
+.wipe {
+  position: fixed; inset: 0; z-index: 60; pointer-events: none; transform: translateX(101%);
+  background: linear-gradient(90deg, var(--color-header) calc(100% - 6px), var(--color-tonique) calc(100% - 6px));
+  animation: wipe-out .75s cubic-bezier(.76, 0, .24, 1) both;
+}
+html.leaving .wipe { animation: wipe-in .38s cubic-bezier(.76, 0, .24, 1) both; }
+@keyframes wipe-out { from { transform: translateX(0); } to { transform: translateX(101%); } }
+@keyframes wipe-in { from { transform: translateX(-101%); } to { transform: translateX(0); } }
+html.leaving #contenu { animation: page-out .38s ease-in both; }
+@keyframes page-out { to { opacity: 0; transform: scale(.985); filter: blur(4px); } }
+
+/* Entrée des éléments (délai = --d × 90 ms, après le rideau) */
+.reveal { animation: rise .8s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(var(--d, 0) * 90ms + 320ms); }
+@keyframes rise { from { opacity: 0; transform: translateY(28px); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+
+/* Barre d'ancres : l'indicateur doré coulisse sous le lien actif (JS) ; sans JS, le lien actif garde son dégradé */
+nav[data-ind] [data-indicator] { display: block; }
+nav[data-ind] .snav[aria-current='true'] { background-image: none; background-color: transparent; border-color: transparent; }
+nav[data-ind] .snav { transition: color .3s; }
+nav[data-ind] .snav[aria-current='true'] { font-weight: 700; }
+[data-indicator].is-ready { transition: transform .35s cubic-bezier(.3, .7, .2, 1), width .35s cubic-bezier(.3, .7, .2, 1), height .35s; }
+/* Section visible : sa puce s'illumine */
+section[data-active] > h2 > span { transform: scale(1.5); box-shadow: 0 0 14px var(--color-tonique); }
+section[id] > h2 > span { transition: transform .35s, box-shadow .35s; }

@@ -1,0 +1,46 @@
+---
+import Base from '../layouts/Base.astro';
+import SectionNav from '../components/SectionNav.astro';
+import { about, site } from '../data/content';
+import { rich } from '../lib/rich';
+const sections = [{ id: 'qui', label: 'Qui suis-je ?' }, { id: 'entrepreneur', label: 'Entrepreneur' }, { id: 'etudiant', label: 'Étudiant' }];
+---
+<Base title="À propos — Maël Brungard" description="Développeur Full Stack et auto-entrepreneur, étudiant en BUT MMI à Montbéliard. Mon parcours, mes forces, mes valeurs." current="À propos">
+  <div class="stripes px-5 py-8 lg:grid lg:grid-cols-[17.9375rem_1fr] lg:px-[6.25rem]">
+    <div class="reveal lg:pt-8"><a href="/accueil" class="btn-sm mb-6 w-fit lg:mx-auto lg:flex">Retour</a></div>
+    <div>
+      <header class="flex items-start justify-between gap-6">
+        <div class="space-y-2">
+          <p style="--d:0" class="reveal font-tag text-xl font-semibold uppercase text-tonique lg:text-2xl">Développeur Full Stack &amp; Auto-Entrepreneur</p>
+          <h1 style="--d:1" class="reveal font-titre text-5xl leading-none lg:text-[4rem]">Maël Brungard</h1>
+          <p style="--d:2" class="reveal font-tag text-lg lg:text-2xl">
+            <a href={`mailto:${site.email}`} class="hover:text-tonique">{site.email}</a> • <a href={`tel:${site.phone.replace(/\s/g, '')}`} class="hover:text-tonique">{site.phone}</a> • {site.city}
+          </p>
+          <a style="--d:3" href={site.cv} download class="reveal panel gradient-gold mt-3 inline-block px-5 py-2 font-semibold transition hover:brightness-125">Télécharger mon CV</a>
+        </div>
+        <svg aria-hidden="true" viewBox="0 0 200 160" class="reveal mt-4 hidden w-56 shrink-0 lg:block" style="--d:3">
+          <path d="M45 8h110l40 66h-60z" fill="#f2f1df" /><path d="M15 52h100l40 70H55z" fill="#e6c280" /><path d="M5 140h100l12 20H17z" fill="#e6c280" opacity=".7" />
+        </svg>
+      </header>
+
+      <SectionNav items={sections} label="Sections de la page" />
+
+      <div class="space-y-16 pb-10">
+        {sections.map((t) => (
+          <section id={t.id}>
+            <h2 class="mb-6 flex items-center gap-4 border-b border-tonique/40 pb-3 font-titre text-3xl lg:text-[2.25rem]">
+              <span aria-hidden="true" class="size-3 rounded-full bg-tonique"></span>{t.label}
+            </h2>
+            <div class="grid gap-x-12 gap-y-6 lg:grid-cols-2">
+              {about[t.id as keyof typeof about].map((col) => (
+                <div class="space-y-6">
+                  {col.map((s) => <div><h3 class="h-section">{s.title}</h3><p class="rich text-lg font-light lg:text-xl" set:html={rich(s.text)} /></div>)}
+                </div>
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
+    </div>
+  </div>
+</Base>

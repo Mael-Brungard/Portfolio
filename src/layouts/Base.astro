@@ -1,0 +1,75 @@
+---
+import '@fontsource/emblema-one/400.css';
+import '@fontsource/inter/300.css';
+import '@fontsource/inter/400.css';
+import '@fontsource/inter/600.css';
+import '@fontsource/inter/700.css';
+import '@fontsource/cormorant-garamond/300.css';
+import '@fontsource/cormorant-garamond/500.css';
+import '@fontsource/cormorant-garamond/600.css';
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+interface Props {
+  title: string;
+  description?: string;
+  current?: string;
+  crumb?: { label: string; href?: string }[];
+  footerLinks?: { label: string; href: string }[];
+}
+const { title, description = 'Portfolio de Maël Brungard, développeur Full Stack, étudiant en BUT MMI et auto-entrepreneur.', current, crumb, footerLinks } = Astro.props;
+const canonical = new URL(Astro.url.pathname, Astro.site).href;
+const jsonLd = {
+  '@context': 'https://schema.org', '@type': 'Person', name: 'Maël Brungard', jobTitle: 'Développeur Full Stack',
+  url: Astro.site?.href, email: 'mailto:mael.brungard@gmail.com', address: { '@type': 'PostalAddress', addressLocality: 'Montbéliard', postalCode: '25200', addressCountry: 'FR' },
+};
+---
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#1f130b" />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+    <!--
+      Cette page est aussi affichée DANS l'écran de l'ordinateur 3D (iframe).
+      - Dans l'iframe : on ajoute la classe "embed".
+      - Hors iframe sur un grand écran avec WebGL : on redirige vers la scène 3D (/?go=…).
+      - Mobile / pas de WebGL / ?flat (mémorisé en session) : on reste sur la version 2D (la maquette mobile).
+      Le HTML reste complet et indexable pour les moteurs de recherche.
+    -->
+    <script is:inline>
+      (function () {
+        document.documentElement.classList.add('js');
+        if (window.self !== window.top) { document.documentElement.classList.add('embed'); return; }
+        // Choix « Version 2D » mémorisé pour la session : changer de page ne repasse plus en 3D
+        if (new URLSearchParams(location.search).has('flat')) { try { sessionStorage.setItem('flat', '1'); } catch (e) {} return; }
+        try { if (sessionStorage.getItem('flat') === '1') return; } catch (e) {}
+        var ok = matchMedia('(min-width:1024px) and (hover:hover) and (pointer:fine)').matches;
+        if (ok) { try { var c = document.createElement('canvas'); ok = !!(c.getContext('webgl2') || c.getContext('webgl')); } catch (e) { ok = false; } }
+        if (ok && location.pathname.indexOf('/mentions-legales') !== 0) location.replace('/?go=' + encodeURIComponent(location.pathname));
+      })();
+    </script>
+  </head>
+  <body id="top" class="min-h-svh">
+    <a href="#contenu" class="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:bg-tonique focus:p-3 focus:text-header">Aller au contenu</a>
+    <div class="wipe" aria-hidden="true"></div>
+    <Header current={current} crumb={crumb} />
+    <main id="contenu">
+      <slot />
+    </main>
+    <Footer links={footerLinks} />
+    <script>
+      import '../scripts/page.ts';
+    </script>
+  </body>
+</html>

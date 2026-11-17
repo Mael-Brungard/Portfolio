@@ -1,0 +1,43 @@
+---
+import Base from '../layouts/Base.astro';
+---
+<Base title="Contact — Maël Brungard" description="Contactez Maël Brungard, développeur Full Stack, pour un stage, une alternance ou un projet." current="Contact">
+  <div class="stripes px-5 py-8 lg:grid lg:grid-cols-[17.9375rem_1fr_17.9375rem] lg:px-[6.25rem]">
+    <div class="reveal lg:pt-8"><a href="/accueil" class="btn-sm mb-6 w-fit lg:mx-auto lg:flex">Retour</a></div>
+    <form id="contact-form" style="--d:1" class="reveal panel gradient-gold flex flex-col gap-4 p-5 lg:p-10" novalidate>
+      <h1 class="text-center font-titre text-4xl lg:text-[4rem]">Contactez-moi</h1>
+      <div class="grid gap-4 lg:grid-cols-2">
+        <label class="font-tag text-xl font-semibold lg:text-2xl">Nom<input name="nom" required autocomplete="name" placeholder="Nom" class="field mt-2 block font-corps text-base font-normal" /></label>
+        <label class="font-tag text-xl font-semibold lg:text-2xl">Email<input name="email" type="email" required autocomplete="email" placeholder="Email" class="field mt-2 block font-corps text-base font-normal" /></label>
+      </div>
+      <label class="font-tag text-xl font-semibold lg:text-2xl">Sujet<input name="sujet" required placeholder="Sujet" class="field mt-2 block font-corps text-base font-normal" /></label>
+      <label class="font-tag text-xl font-semibold lg:text-2xl">Message<textarea name="message" required rows="8" placeholder="Message" class="field mt-2 block min-h-48 resize-y font-corps text-base font-normal lg:min-h-80"></textarea></label>
+      <input name="website" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true" /> <!-- anti-spam (honeypot) -->
+      <p id="form-status" role="status" class="min-h-6 text-center font-tag text-xl text-tonique"></p>
+      <button type="submit" class="btn-sm mx-auto not-italic">Envoyer</button>
+    </form>
+  </div>
+</Base>
+<script>
+  const form = document.getElementById('contact-form') as HTMLFormElement;
+  const status = document.getElementById('form-status')!;
+  const endpoint = import.meta.env.PUBLIC_FORM_ENDPOINT as string | undefined;
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!form.checkValidity()) { status.textContent = 'Merci de remplir tous les champs correctement.'; form.reportValidity(); return; }
+    const data = new FormData(form);
+    if (data.get('website')) return; // robot
+    if (endpoint) {
+      try {
+        const r = await fetch(endpoint, { method: 'POST', body: data, headers: { Accept: 'application/json' } });
+        if (!r.ok) throw new Error();
+        form.reset(); status.textContent = 'Message envoyé, merci !';
+      } catch { status.textContent = 'Échec de l’envoi. Écrivez-moi directement par e-mail.'; }
+    } else {
+      const body = `${data.get('message')}\n\n— ${data.get('nom')} (${data.get('email')})`;
+      window.open(`mailto:mael.brungard@gmail.com?subject=${encodeURIComponent(String(data.get('sujet')))}&body=${encodeURIComponent(body)}`, '_blank');
+      status.textContent = 'Votre messagerie s’ouvre avec le message prêt à envoyer.';
+    }
+  });
+</script>

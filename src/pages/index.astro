@@ -1,0 +1,74 @@
+---
+import '@fontsource/emblema-one/400.css';
+import '@fontsource/inter/400.css';
+import '@fontsource/cormorant-garamond/500.css';
+import '../styles/global.css';
+import { nav } from '../data/content';
+---
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Maël Brungard — Développeur Full Stack | Portfolio 2026</title>
+    <meta name="description" content="Portfolio de Maël Brungard, développeur Full Stack : entrez dans mon bureau 3D et naviguez depuis l'écran de l'ordinateur." />
+    <meta name="theme-color" content="#1f130b" />
+    <link rel="canonical" href={new URL('/', Astro.site).href} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <noscript><meta http-equiv="refresh" content="0;url=/accueil" /></noscript>
+    <!-- Mobile / tactile / « Version 2D » choisie (mémorisée en session) : pas de scène 3D → site 2D.
+         /?3d efface ce choix. -->
+    <script is:inline>
+      (function () {
+        var flat = false;
+        if (new URLSearchParams(location.search).has('3d')) { try { sessionStorage.removeItem('flat'); } catch (e) {} }
+        else { try { flat = sessionStorage.getItem('flat') === '1'; } catch (e) {} }
+        if (flat || !matchMedia('(min-width:1024px) and (hover:hover) and (pointer:fine)').matches) location.replace('/accueil');
+      })();
+    </script>
+  </head>
+  <body class="bg-header text-secondaire">
+    <main id="stage" data-state="loading" class="relative h-svh w-full overflow-clip bg-header">
+      <!-- Le canvas WebGL et le rendu CSS3D (iframe) sont injectés ici par scene.ts -->
+
+      <div class="vignette pointer-events-none absolute inset-0 z-[2]"></div>
+      <div class="grain pointer-events-none absolute inset-0 z-[2]"></div>
+
+      <p id="hint" aria-hidden="true" class="pointer-events-none absolute inset-x-0 bottom-10 z-[3] text-center font-tag text-2xl text-tonique transition-opacity duration-500">
+        <span class="animate-pulse">Cliquez n’importe où pour allumer l’écran</span>
+      </p>
+      <button id="enter" type="button" class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-10 focus:bg-tonique focus:p-3 focus:text-header">Allumer l’écran de l’ordinateur</button>
+      <button id="exit" type="button" class="btn-sm absolute bottom-1.5 left-1/2 z-[3] -translate-x-1/2 !py-0.5 opacity-0 transition-opacity duration-300 pointer-events-none">← Reculer (Échap)</button>
+      <a id="flat" href="/accueil?flat" class="btn-sm absolute bottom-4 right-5 z-[3] gap-2 shadow-[0_4px_20px_rgba(0,0,0,.5)]">
+        <svg aria-hidden="true" viewBox="0 0 20 20" class="size-4" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.5" y="3.5" width="15" height="10" rx="1.5" /><path d="M7 17h6M10 13.5V17" /></svg>
+        Version 2D
+      </a>
+
+      <div id="loader" class="absolute inset-0 z-[4] grid place-content-center gap-4 bg-header text-center transition-opacity duration-700">
+        <p class="font-titre text-4xl">Maël Brungard</p>
+        <div class="mx-auto h-0.5 w-40 overflow-hidden bg-tonique/20"><div class="h-full w-1/3 animate-[slide_1.1s_ease-in-out_infinite] bg-tonique"></div></div>
+        <p class="font-tag text-lg text-tonique">Installation du bureau…</p>
+      </div>
+
+      <!-- Contenu accessible / indexable (lecteurs d'écran, moteurs de recherche) -->
+      <div class="sr-only">
+        <h1>Maël Brungard — Développeur Full Stack</h1>
+        <nav aria-label="Pages du site"><ul>{nav.map((l) => <li><a href={l.href + '?flat'}>{l.label}</a></li>)}</ul></nav>
+      </div>
+    </main>
+  </body>
+</html>
+
+<style is:global>
+  html, body { height: 100%; overflow: clip; }
+  @keyframes slide { 0% { transform: translateX(-100%); } 100% { transform: translateX(300%); } }
+  #stage[data-state='screen'] #hint, #stage[data-state='moving'] #hint, #stage[data-state='loading'] #hint { opacity: 0; }
+  #stage[data-state='screen'] #exit { opacity: 1; pointer-events: auto; }
+  #stage[data-state='screen'] #flat { opacity: 0; pointer-events: none; }
+  #stage[data-state='idle'] { cursor: pointer; }
+  #stage canvas { position: absolute; inset: 0; z-index: 1; display: block; }
+</style>
+
+<script>
+  import '../scripts/scene.ts';
+</script>

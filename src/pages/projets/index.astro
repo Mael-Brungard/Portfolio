@@ -1,0 +1,78 @@
+---
+import Base from '../../layouts/Base.astro';
+import ProjectCard from '../../components/ProjectCard.astro';
+import { getProjects, getSkills, getContexts } from '../../lib/db';
+
+// Les projets viennent de la base SQLite (db/portfolio.sqlite), lue au build.
+const projects = getProjects(), skills = getSkills(), contexts = getContexts();
+const groups = [
+  { id: 'scolaire', title: 'Projets Scolaires', list: projects.filter((p) => p.group === 'scolaire') },
+  { id: 'perso-pro', title: 'Projets Personnels & Professionnels', list: projects.filter((p) => p.group === 'perso-pro') },
+];
+---
+<Base title="Projets — Maël Brungard" description="Projets scolaires, personnels et professionnels de Maël Brungard : SkillArt, E-Commerce, Taverne Étudiante, Mini-Jeux…" current="Projets">
+  <div class="stripes px-5 py-8 lg:grid lg:grid-cols-[18.4375rem_1fr] lg:gap-6 lg:px-[3.125rem]">
+    <aside class="reveal lg:pt-8">
+      <a href="/accueil" class="btn-sm mb-4 w-fit lg:mx-auto lg:mb-10 lg:flex">Retour</a>
+      <button id="toggle-filters" type="button" class="btn-sm mb-4 lg:hidden" aria-expanded="false" aria-controls="filters">Filtrer</button>
+      <form id="filters" class="panel hidden flex-col gap-3 p-5 lg:flex" aria-label="Filtrer les projets">
+        <fieldset>
+          <legend class="mb-2 font-titre text-lg italic lg:text-xl">Skills</legend>
+          <div class="flex flex-wrap gap-2 lg:flex-col lg:px-3">
+            {skills.map((s) => <button type="button" class="pill" data-skill={s} aria-pressed="false">{s}</button>)}
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend class="mb-2 mt-3 font-titre text-lg italic lg:text-xl">Contexte</legend>
+          <div class="flex flex-wrap gap-2 lg:flex-col lg:px-3">
+            {contexts.map((c) => <button type="button" class="pill" data-context={c.id} aria-pressed="false">{c.label}</button>)}
+          </div>
+        </fieldset>
+        <button type="reset" id="reset" class="font-tag text-lg underline-offset-2 hover:underline">Tout afficher</button>
+      </form>
+    </aside>
+
+    <div class="flex flex-col gap-10">
+      <h1 class="sr-only">Tous mes projets</h1>
+      {groups.map((g) => (
+        <section data-group aria-labelledby={`h-${g.id}`}>
+          <h2 id={`h-${g.id}`} class="mb-5 font-titre text-2xl italic lg:text-[2rem]">{g.title}</h2>
+          <ul class="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">{g.list.map((p, i) => <ProjectCard p={p} i={i} />)}</ul>
+        </section>
+      ))}
+      <p id="empty" hidden class="panel p-6 font-tag text-xl" role="status">Aucun projet ne correspond à ces filtres.</p>
+    </div>
+  </div>
+</Base>
+
+<script>
+  // Filtres : un projet est visible s'il a AU MOINS un des skills choisis ET correspond à un des contextes choisis.
+  const cards = [...document.querySelectorAll<HTMLElement>('[data-card]')];
+  const groups = [...document.querySelectorAll<HTMLElement>('[data-group]')];
+  const pills = [...document.querySelectorAll<HTMLButtonElement>('.pill')];
+  const empty = document.getElementById('empty')!;
+
+  const active = (attr: 'skill' | 'context') =>
+    pills.filter((p) => p.getAttribute('aria-pressed') === 'true' && p.dataset[attr]).map((p) => p.dataset[attr]!);
+
+  const apply = () => {
+    const sk = active('skill'), cx = active('context');
+    cards.forEach((c) => {
+      const okS = !sk.length || sk.some((s) => c.dataset.skills!.split('|').includes(s));
+      const okC = !cx.length || cx.includes(c.dataset.context!);
+      c.hidden = !(okS && okC);
+    });
+    groups.forEach((g) => (g.hidden = ![...g.querySelectorAll<HTMLElement>('[data-card]')].some((c) => !c.hidden)));
+    empty.hidden = cards.some((c) => !c.hidden);
+  };
+
+  pills.forEach((p) => p.addEventListener('click', () => { p.setAttribute('aria-pressed', String(p.getAttribute('aria-pressed') !== 'true')); apply(); }));
+  document.getElementById('filters')!.addEventListener('reset', () => { pills.forEach((p) => p.setAttribute('aria-pressed', 'false')); setTimeout(apply); });
+
+  const toggle = document.getElementById('toggle-filters')!;
+  const panel = document.getElementById('filters')!;
+  toggle.addEventListener('click', () => {
+    const open = panel.classList.toggle('hidden') === false;
+    toggle.setAttribute('aria-expanded', String(open));
+  });
+</script>

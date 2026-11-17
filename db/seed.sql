@@ -1,0 +1,87 @@
+-- Export automatique de db/portfolio.sqlite (npm run admin / npm run db:dump). Recréer la base : npm run db:seed
+PRAGMA foreign_keys = ON;
+
+INSERT INTO contexts(id, label, long_label, position) VALUES ('perso', 'Perso', 'Personnel', 1);
+INSERT INTO contexts(id, label, long_label, position) VALUES ('pro', 'Pro', 'Professionnel', 2);
+INSERT INTO contexts(id, label, long_label, position) VALUES ('mmi1', 'MMI 1', 'MMI - 1re année', 3);
+INSERT INTO contexts(id, label, long_label, position) VALUES ('mmi2', 'MMI 2', 'MMI - 2e année', 4);
+
+INSERT INTO skills(id, name, filterable, position) VALUES (1, 'NodeJS', 1, 1);
+INSERT INTO skills(id, name, filterable, position) VALUES (2, 'Astro', 1, 2);
+INSERT INTO skills(id, name, filterable, position) VALUES (3, 'SQL', 1, 3);
+INSERT INTO skills(id, name, filterable, position) VALUES (4, 'GitHub', 1, 4);
+INSERT INTO skills(id, name, filterable, position) VALUES (5, 'Tailwind', 1, 5);
+INSERT INTO skills(id, name, filterable, position) VALUES (6, 'JavaScript', 1, 6);
+INSERT INTO skills(id, name, filterable, position) VALUES (7, 'Figma', 1, 7);
+INSERT INTO skills(id, name, filterable, position) VALUES (8, 'HTML', 1, 8);
+INSERT INTO skills(id, name, filterable, position) VALUES (9, 'CSS', 1, 9);
+INSERT INTO skills(id, name, filterable, position) VALUES (10, 'Gestion', 1, 10);
+INSERT INTO skills(id, name, filterable, position) VALUES (11, 'BDD', 0, 11);
+INSERT INTO skills(id, name, filterable, position) VALUES (12, 'Apache2', 0, 12);
+
+INSERT INTO projects(id, slug, title, logo, context_id, grp, summary, position, published) VALUES (1, 'mocktailwave', 'MocktailWave', '/img/mocktailwave.svg', 'mmi1', 'scolaire', 'MocktailWave — MMI - 1re année. Compétences : Gestion, Astro, Tailwind.', 1, 1);
+INSERT INTO projects(id, slug, title, logo, context_id, grp, summary, position, published) VALUES (2, 'sae-105', 'SAE 105', '/img/sae-105.svg', 'mmi1', 'scolaire', 'SAE 105 — MMI - 1re année. Compétences : Figma, Gestion.', 2, 1);
+INSERT INTO projects(id, slug, title, logo, context_id, grp, summary, position, published) VALUES (3, 'matilda-presse', 'Matilda Presse', '/img/matilda-presse.svg', 'mmi1', 'scolaire', 'Matilda Presse — MMI - 1re année. Compétences : JavaScript, HTML, CSS.', 3, 1);
+INSERT INTO projects(id, slug, title, logo, context_id, grp, summary, position, published) VALUES (4, 'redpanda-studio', 'RedPanda Studio', '/img/redpanda-studio.svg', 'mmi1', 'scolaire', 'RedPanda Studio — MMI - 1re année. Compétences : Gestion, Figma.', 4, 1);
+INSERT INTO projects(id, slug, title, logo, context_id, grp, summary, position, published) VALUES (5, 'skillart', 'Projet SkillArt', '/img/skillart.svg', 'pro', 'perso-pro', 'Dans un contexte d’utilisation excessive de l’intelligence artificielle, **SkillArt** vient s’opposer à ce mouvement en proposant une **banque d’images** réservée aux **artistes** (graphistes, photographes, architectes) avec une **politique stricte** sur l’IA.', 5, 1);
+INSERT INTO projects(id, slug, title, logo, context_id, grp, summary, position, published) VALUES (6, 'e-commerce', 'E-Commerce', '/img/e-commerce.svg', 'pro', 'perso-pro', 'E-Commerce — Professionnel. Compétences : NodeJS, BDD, JavaScript.', 6, 1);
+INSERT INTO projects(id, slug, title, logo, context_id, grp, summary, position, published) VALUES (7, 'taverne-etudiante', 'Taverne Étudiante', '/img/taverne-etudiante.svg', 'pro', 'perso-pro', 'Taverne Étudiante — Professionnel. Compétences : Tailwind, Astro, Figma.', 7, 1);
+INSERT INTO projects(id, slug, title, logo, context_id, grp, summary, position, published) VALUES (8, 'mini-jeux', 'Mini-Jeux', '/img/mini-jeux.svg', 'perso', 'perso-pro', 'Mini-Jeux — Personnel. Compétences : JavaScript, GitHub, HTML.', 8, 1);
+
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (1, 2, 'stack', 1);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (1, 5, 'stack', 2);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (1, 6, 'stack', 3);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (1, 7, 'stack', 4);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (1, 10, 'tag', 1);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (1, 2, 'tag', 2);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (1, 5, 'tag', 3);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (2, 7, 'stack', 1);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (2, 7, 'tag', 1);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (2, 10, 'tag', 2);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (3, 8, 'stack', 1);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (3, 9, 'stack', 2);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (3, 6, 'stack', 3);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (3, 6, 'tag', 1);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (3, 8, 'tag', 2);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (3, 9, 'tag', 3);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (4, 7, 'stack', 1);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (4, 10, 'tag', 1);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (4, 7, 'tag', 2);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (5, 1, 'stack', 1);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (5, 3, 'stack', 2);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (5, 12, 'stack', 3);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (5, 4, 'stack', 4);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (5, 5, 'stack', 5);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (5, 6, 'stack', 6);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (5, 7, 'stack', 7);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (5, 7, 'tag', 1);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (5, 4, 'tag', 2);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (5, 10, 'tag', 3);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (6, 1, 'stack', 1);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (6, 3, 'stack', 2);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (6, 6, 'stack', 3);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (6, 1, 'tag', 1);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (6, 11, 'tag', 2);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (6, 6, 'tag', 3);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (7, 2, 'stack', 1);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (7, 5, 'stack', 2);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (7, 7, 'stack', 3);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (7, 5, 'tag', 1);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (7, 2, 'tag', 2);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (7, 7, 'tag', 3);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (8, 8, 'stack', 1);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (8, 6, 'stack', 2);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (8, 4, 'stack', 3);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (8, 6, 'tag', 1);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (8, 4, 'tag', 2);
+INSERT INTO project_skills(project_id, skill_id, kind, position) VALUES (8, 8, 'tag', 3);
+
+INSERT INTO sections(id, project_id, tab, title, body, position) VALUES (1, 5, 'contexte', 'Notre équipe', 'Exclusivement composée **d’étudiants,** l’équipe de SkillArt est dotée d’un large panel de compétences (BUT Réseaux & Télécom, BUT Informatique, BUT Métiers du multimédia et de l’Internet).', 1);
+INSERT INTO sections(id, project_id, tab, title, body, position) VALUES (2, 5, 'contexte', 'Mon rôle', 'Au sein de cette équipe, j’occupe plusieurs rôles, dont **chef de projet**, **responsable communication** et **designer d’interface**.', 2);
+INSERT INTO sections(id, project_id, tab, title, body, position) VALUES (3, 5, 'contexte', 'Nos Valeurs', 'L’art et la culture sont pour nous des valeurs importantes qui ne devraient pas se perdre à cause de l’intelligence artificielle.', 3);
+INSERT INTO sections(id, project_id, tab, title, body, position) VALUES (4, 5, 'contexte', 'Notre But', 'Le but premier de SkillArt est de déclencher une prise de **conscience** sur l’impact de l’IA sur la culture et l’art.', 4);
+INSERT INTO sections(id, project_id, tab, title, body, position) VALUES (5, 5, 'processus', 'Réflexions', 'Nos réflexions ont été orientées vers plusieurs sujets, comme le **public visé**, le **nom**, les **fonctionnalités importantes** ou encore les **pistes graphiques**.', 1);
+INSERT INTO sections(id, project_id, tab, title, body, position) VALUES (6, 5, 'processus', 'Obstacles', 'Le plus grand obstacle de ce projet était de réussir à **identifier** les posts **IA** pour les supprimer.', 2);
+INSERT INTO sections(id, project_id, tab, title, body, position) VALUES (7, 5, 'processus', 'Résultats', 'Pour le nom, les deux idées marquantes ont été **Skeetch** et SkillArt, puis nous sommes finalement partis sur **SkillArt** qui s’éloignait plus de ce qui existait déjà. Pour le public, nous visons surtout les **artistes** et nous avons donc pensé nos fonctionnalités en conséquence.', 3);
+INSERT INTO sections(id, project_id, tab, title, body, position) VALUES (8, 5, 'processus', 'Solutions', 'Pour identifier les posts IA, nous avons deux solutions principales que nous allons combiner, tout d’abord un **algorithme** qui va chercher dans l’image toute signature d’IA générative connue, visible ou invisible. Puis ensuite, un **système de vote** qui impactera un score de confiance de l’utilisateur.', 4);
+

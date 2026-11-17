@@ -1,0 +1,38 @@
+---
+import Base from '../layouts/Base.astro';
+import Tags from '../components/Tags.astro';
+import { stack, accent } from '../data/content';
+const code = [
+  ['<k>const</k> mael = {'],
+  ['  role: <s>"Développeur Full Stack"</s>,'],
+  ['  stack: [<s>"NodeJS"</s>, <s>"SQL"</s>, <s>"Tailwind"</s>, <s>"Figma"</s>],'],
+  ['  statut: <s>"Étudiant MMI · Auto-entrepreneur"</s>,'],
+  ['  cherche: [<s>"alternance"</s>, <s>"stage"</s>],'],
+  ['};'],
+  [''],
+  ['<c>// bien plus complet qu’une simple IA.</c>'],
+  ['mael.<k>collaborer</k>();<span class="caret" aria-hidden="true"></span>'],
+];
+---
+<Base title="Maël Brungard — Développeur Full Stack | Portfolio 2026" current="Accueil">
+  <section class="stripes grid min-h-[calc(100svh-4.9rem)] items-center gap-10 px-5 py-10 lg:grid-cols-[1.15fr_1fr] lg:px-[6.25rem]">
+    <div class="flex flex-col gap-5">
+      <p style="--d:0" class="reveal font-tag text-xl uppercase text-tonique lg:text-2xl">Portfolio - Maël Brungard - 2026</p>
+      <h1 style="--d:1" class="reveal font-titre text-5xl leading-none lg:text-[6rem]">Développeur <span class="text-tonique">Full Stack</span></h1>
+      <Tags tags={stack} accent={accent} class="reveal text-xl lg:text-2xl" />
+      <p style="--d:3" class="reveal panel rich px-6 py-4 text-lg font-light lg:px-10 lg:py-5 lg:text-2xl">
+        <strong>Étudiant</strong> en MMI 2ᵉ année et <strong>passionné</strong> de dev depuis 6 ans. Auto-entrepreneur depuis 2 ans sur différents projets. Mon expérience et mon autonomie font de moi un profil bien plus complet qu’une simple intelligence artificielle.
+      </p>
+      <div style="--d:4" class="reveal flex lg:justify-center lg:py-5"><a href="/projets" class="btn">Voir plus ...</a></div>
+    </div>
+
+    <!-- Encadré de la maquette : un faux éditeur de code qui « tape » le profil -->
+    <div style="--d:2" class="reveal panel gradient-gold mx-auto w-full max-w-[43.75rem] overflow-hidden" role="img" aria-label="Extrait de code résumant mon profil de développeur Full Stack">
+      <div class="flex items-center gap-2 border-b border-tonique/40 bg-black/30 px-4 py-3" aria-hidden="true">
+        <span class="size-3 rounded-full bg-tonique/90"></span><span class="size-3 rounded-full bg-tonique/50"></span><span class="size-3 rounded-full bg-tonique/25"></span>
+        <span class="ml-3 font-mono text-xs text-secondaire/70">mael.ts</span>
+      </div>
+      <pre class="overflow-x-auto p-5 font-mono text-[13px] leading-7 text-secondaire sm:text-base lg:p-8 lg:text-lg [&_c]:text-secondaire/50 [&_k]:text-tonique [&_s]:text-[#f0d9a8]" aria-hidden="true"><code>{code.map((l, i) => <span class="line" style={`--i:${i}`} set:html={l[0] || ' '} />)}</code></pre>
+    </div>
+  </section>
+</Base>
