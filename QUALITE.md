@@ -1,31 +1,22 @@
-# Grille de contrôle qualité (adaptée à CE site)
+Accessibilité
+La 3D n'est jamais obligatoire : version 2D complète sur mobile, sans WebGL ou via le bouton « Version 2D ».
+Navigation au clavier : Entrée allume l'écran 3D, Échap recule, menu mobile et carrousel utilisables au clavier.
+Animations coupées si le système demande de réduire les animations (prefers-reduced-motion).
+Contrastes : or #e6c280 sur marron #332013 = 9,1:1, crème #f2f1df sur marron = 13,6:1 (niveau AAA).
+À corriger : les images des galeries n'ont pas encore de texte alternatif.
 
-> À remplir avec les critères **retenus pour ce site**, l'outil utilisé, le résultat et ce qui a été corrigé.
-> Une grille générique recopiée sans rapport démontré ne vaut rien.
+Sobriété et performance
+EcoIndex A sur toutes les pages (83 à 92/100, estimé avec la formule d'ecoindex.fr, à confirmer en ligne).
+Images converties en WebP : 18 Mo ramenés à 1 Mo.
+Polices limitées au jeu de caractères latin.
+Three.js chargé uniquement sur la scène 3D, les pages 2D n'ont presque pas de JavaScript.
+La scène 3D ne se redessine plus quand on est zoomé sur l'écran.
 
-## Accessibilité
-| Critère retenu (pourquoi il compte ici) | Outil / méthode | Résultat | Correction |
-|---|---|---|---|
-| Alternative sans 3D (la scène ne doit pas être obligatoire) | Test mobile + WebGL désactivé | | |
-| Navigation clavier de la scène (Entrée = allumer, Échap = reculer) | Test manuel | | |
-| `prefers-reduced-motion` respecté | DevTools > Rendering | | |
-| Contrastes or `#e6c280` sur `#332013` | | | |
+Référencement
+Pages réelles et statiques, indexables malgré la scène 3D.
+Titre, description, URL canonique et données structurées (JSON-LD) sur chaque page, fichier robots.txt présent.
 
-## Sobriété & performance
-| Critère | Outil | Résultat | Correction |
-|---|---|---|---|
-| Poids de `/` (three.js chargé seulement sur la scène) | DevTools Network | | |
-| Poids des pages 2D (HTML + CSS, 0 JS lourd) | Lighthouse / EcoIndex | | |
-
-## Référencement
-| Critère | Outil | Résultat | Correction |
-|---|---|---|---|
-| Pages réelles indexables (`/accueil`, `/projets`…) malgré la scène | Vue source | | |
-| title / description / canonical / JSON-LD | | | |
-
-## Conformité juridique
-| Critère | Résultat | Correction |
-|---|---|---|
-| Mentions légales (`/mentions-legales`) complétées | | |
-| Droits des images / logos de projets | | |
-| Formulaire de contact : RGPD (finalité, pas de stockage inutile) | | |
+Conformité juridique
+Mentions légales présentes, hébergeur à compléter.
+Formulaire de contact sans stockage de données.
+Logos et images des projets : créations personnelles ou réalisées dans le cadre des projets.
