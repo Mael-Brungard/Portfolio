@@ -10,3 +10,5 @@ Animation caméra (GSAP) : rig.pos, rig.look, FOV.
 Communication iframe ↔ scène (postMessage).
 Base SQLite lue au build (src/lib/db.ts) et admin local (admin/server.mjs).
 Fallback sans 3D (mobile, pas de WebGL) = version 2D de la maquette.
+
+

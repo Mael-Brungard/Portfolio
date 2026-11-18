@@ -1,8 +1,8 @@
 import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 
-// ⚠️ Remplace par TON nom de domaine (utilisé pour le canonical, le sitemap, l'OpenGraph)
+// Domaine de production (URL canonique, OpenGraph, JSON-LD)
 export default defineConfig({
-  site: 'https://mael-brungard.fr',
+  site: 'https://portfolio.taverne-etudiante.fr',
   vite: { plugins: [tailwindcss()] },
 });

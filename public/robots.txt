@@ -1,3 +1,2 @@
 User-agent: *
 Allow: /
-Sitemap: https://mael-brungard.fr/sitemap-index.xml
