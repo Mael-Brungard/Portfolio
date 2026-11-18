@@ -8,7 +8,7 @@
 | Claude | Développement | Génération du squelette Astro + Tailwind, de la scène Three.js (bureau, caméra, écran CSS3D) | _À compléter : ce que j'ai relu, compris, changé, rejeté_ |
 | _(ex. Figma AI, Midjourney…)_ | | | |
 
-- Textes du site : **rédigés par moi** (maquette Figma), simplement repris tels quels dans le code. Aucun texte généré par l'IA.
+- Textes du site : **rédigés par moi** (maquette Figma), simplement repris tels quels dans le code. Seulement quelque modification apporté suite aux commentaires de la soutenance maquette. Aucun texte généré par l'IA. 
 
 ## Ce que je maîtrise et peux défendre à l'oral
 - [ ] Architecture : pages Astro réelles affichées dans un `<iframe>` projeté sur l'écran 3D (CSS3DRenderer)
