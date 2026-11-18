@@ -1,4 +1,4 @@
-// npm run db:seed → recrée db/portfolio.sqlite depuis schema.sql + seed.sql
+// bun run db:seed → recrée db/portfolio.sqlite depuis schema.sql + seed.sql
 import { DatabaseSync } from 'node:sqlite';
 import { readFileSync, rmSync } from 'node:fs';
 

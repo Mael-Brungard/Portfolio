@@ -1,4 +1,4 @@
-// Admin LOCAL des projets : npm run admin → http://localhost:4400
+// Admin LOCAL des projets : bun run admin → http://localhost:4400
 // Aucune dépendance : serveur Node + SQLite intégré. Écoute uniquement sur 127.0.0.1 (ta machine).
 // Chaque enregistrement met à jour db/portfolio.sqlite ET db/seed.sql (versionnable avec Git).
 import { createServer } from 'node:http';
@@ -135,7 +135,7 @@ function viewList(flash = '') {
   const rows = db.prepare('SELECT p.*, c.long_label FROM projects p JOIN contexts c ON c.id = p.context_id ORDER BY p.position').all();
   return page(`
   <h1>Projets du portfolio</h1>
-  <p class="hint">Base : <code>db/portfolio.sqlite</code>. Chaque enregistrement met aussi à jour <code>db/seed.sql</code>. Ensuite : <code>npm run dev</code> (aperçu) ou <code>npm run build</code>.</p>
+  <p class="hint">Base : <code>db/portfolio.sqlite</code>. Chaque enregistrement met aussi à jour <code>db/seed.sql</code>. Ensuite : <code>bun run dev</code> (aperçu) ou <code>bun run build</code>.</p>
   <p><a class="btn primary" href="/edit">+ Nouveau projet</a></p>
   <table><tr><th></th><th>Projet</th><th>Contexte</th><th>Ordre</th><th>Statut</th><th>Actions</th></tr>
   ${rows.map((p) => `<tr class="${p.published ? '' : 'off'}">
@@ -180,7 +180,7 @@ function viewForm(v, error = '') {
     <label>Section « Contexte »</label><textarea name="contexte">${esc(v.contexte)}</textarea>
     <label>Section « Processus »</label><textarea name="processus">${esc(v.processus)}</textarea>
     <div class="hint">Format : une ligne <code>## Titre</code>, puis le texte dessous. Répète pour chaque bloc. Les doubles astérisques mettent en doré.</div>
-    <label>Galerie</label><textarea name="galerie" placeholder="/img/projets/mon-projet/01.webp | Description de l'image">${esc(v.galerie)}</textarea>
+    <label>Galerie</label><textarea name="galerie" placeholder="/img/mon-projet/image1.webp | Description de l'image">${esc(v.galerie)}</textarea>
     <div class="hint">Une image par ligne : <code>chemin | texte alternatif</code> (obligatoire pour l'accessibilité).</div>
     <details><summary>Images disponibles dans public/img (${imgs.length})</summary><pre>${esc(imgs.join('\n'))}</pre></details>
     <label><input type="checkbox" name="published" ${v.published ? 'checked' : ''}> Publié (décoche pour garder en brouillon)</label>
@@ -213,7 +213,7 @@ createServer(async (req, res) => {
     }
     if (req.method === 'POST' && url.pathname === '/save') {
       const f = await body(req);
-      try { save(f); return redirect(res, '/?ok=' + encodeURIComponent('Projet enregistré. Relance « npm run build » pour publier.')); }
+      try { save(f); return redirect(res, '/?ok=' + encodeURIComponent('Projet enregistré. Relance « bun run build » pour publier.')); }
       catch (e) { const v = Object.fromEntries(f); return send(res, viewForm({ ...emptyProject, ...v, published: v.published === 'on' ? 1 : 0 }, e.message), 400); }
     }
     if (req.method === 'POST' && url.pathname === '/action') { action(await body(req)); return redirect(res, '/?ok=' + encodeURIComponent('Modification enregistrée.')); }

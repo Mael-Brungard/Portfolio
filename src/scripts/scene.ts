@@ -19,8 +19,7 @@ import gsap from 'gsap';
 /* ───────────── Réglages faciles à ajuster ───────────── */
 const SCREEN_W = 0.8; // largeur de la dalle (m)
 const SCREEN_H = 0.5; // hauteur (ratio 16:10)
-const PAGE_W = 1920; // résolution de la page dans l'écran (px CSS)
-const PAGE_H = 1200;
+const PAGE_MIN_W = 1280; // largeur mini de la page dans l'écran (px CSS) : garde la mise en page « grand écran » (xl)
 const IDLE_FOV = 38;
 const ZOOM_FOV = 26;
 const FILL = 1.07; // marge autour de l'écran en vue zoomée (1 = bord à bord)
@@ -38,7 +37,12 @@ const enterBtn = document.getElementById('enter')!;
 
 type State = 'loading' | 'intro' | 'idle' | 'moving' | 'screen';
 let state: State = 'loading';
-const setState = (s: State) => { state = s; stage.dataset.state = s; };
+/* Rendu à la demande : une fois zoomé sur l'écran, la caméra est immobile → on ne redessine
+   le décor que si quelque chose change (redimensionnement, changement d'état). L'iframe (même
+   origine, donc même thread que la scène) récupère tout le temps CPU/GPU pour rester fluide. */
+let needsRender = true;
+const invalidate = () => { needsRender = true; };
+const setState = (s: State) => { state = s; stage.dataset.state = s; invalidate(); };
 
 /* ───────────── Utilitaires ───────────── */
 function tex(w: number, h: number, draw: (g: CanvasRenderingContext2D, w: number, h: number) => void) {
@@ -83,13 +87,20 @@ async function init() {
   try {
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
   } catch {
-    location.replace('/accueil?flat'); // pas de WebGL → version 2D
+    // Pas de WebGL (désactivé, ou bloqué par le navigateur après des plantages GPU) : on l'explique au lieu de
+    // renvoyer en silence vers la 2D (sinon le bouton « Version 3D » semble juste recharger la page).
+    loader.innerHTML = `<p class="font-titre text-4xl">Maël Brungard</p>
+      <p class="max-w-md font-tag text-xl text-tonique">La version 3D ne peut pas démarrer : WebGL est indisponible dans ce navigateur
+      (accélération matérielle désactivée, ou bloquée après un plantage — redémarrer le navigateur suffit souvent).</p>
+      <a href="/accueil?flat" class="btn-sm mx-auto">Continuer en 2D</a>`;
     return;
   }
   renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
   renderer.setClearColor(0x000000, 0); // fond transparent : laisse voir la couche CSS3D à travers le « trou »
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.shadowMap.autoUpdate = false; // décor et lampe immobiles : la carte d'ombres est calculée une seule fois
+  renderer.shadowMap.needsUpdate = true;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.1;
   renderer.domElement.setAttribute('aria-hidden', 'true');
@@ -161,9 +172,13 @@ async function init() {
     const p = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshBasicMaterial({ map: tex(512, Math.round((512 * h) / w), art), toneMapped: false }));
     p.position.z = 0.0165; g.add(p); g.position.set(x, y, -0.59); scene.add(g);
   };
+  // Logo du site (mêmes tracés que public/favicon.svg), centré dans le cadre
   frame(1.15, 1.55, 0.45, 0.6, (g, w, h) => {
     g.fillStyle = COLOR.header; g.fillRect(0, 0, w, h);
-    g.fillStyle = COLOR.gold; g.font = `${w * 0.5}px "Emblema One"`; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('MB', w / 2, h / 2);
+    const s = (w * 0.72) / 178; // le dessin occupe x 31→209 et y 30→181 dans le viewBox 227×227
+    g.translate(w / 2 - 120 * s, h / 2 - 105.6 * s); g.scale(s, s);
+    g.fillStyle = COLOR.cream; g.fill(new Path2D('M184.744 154.281H60.9263V161.16H209.312V154.281L85.4934 30.4632H60.9263L184.744 154.281Z'));
+    g.fillStyle = COLOR.gold; g.fill(new Path2D('M155.264 173.935H31.4458V180.814H179.831V173.935L56.0129 50.1169H31.4458L155.264 173.935Z'));
   });
   frame(1.8, 1.45, 0.6, 0.4, (g, w, h) => {
     g.fillStyle = '#120a05'; g.fillRect(0, 0, w, h); g.font = `${w * 0.05}px monospace`; g.fillStyle = COLOR.gold;
@@ -237,8 +252,10 @@ async function init() {
     b.position.set(-0.95 + (i % 2) * 0.01, 0.75 + (h as number) / 2 + i * 0.033, 0.18); b.rotation.y = 0.12 * (i - 1); scene.add(b);
   });
   const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.055, 0.12, 20), std('#8a5a3a', 0.8)); pot.position.set(1.3, 0.81, -0.2); scene.add(pot);
+  const leafGeo = new THREE.SphereGeometry(1, 10, 8);
+  const leafMats = [std('#2f5a2f', 0.6), std('#3f6b3a', 0.6)]; // géométrie et matériaux partagés
   for (let i = 0; i < 9; i++) {
-    const leaf = new THREE.Mesh(new THREE.SphereGeometry(1, 10, 8), std(i % 2 ? '#3f6b3a' : '#2f5a2f', 0.6));
+    const leaf = new THREE.Mesh(leafGeo, leafMats[i % 2]);
     leaf.scale.set(0.028, 0.15, 0.012); const a = (i / 9) * Math.PI * 2;
     leaf.position.set(1.3 + Math.cos(a) * 0.05, 1.0, -0.2 + Math.sin(a) * 0.05); leaf.rotation.set(Math.sin(a) * 0.6, 0, -Math.cos(a) * 0.6); scene.add(leaf);
   }
@@ -269,7 +286,10 @@ async function init() {
   const DUST = 220, dustPos = new Float32Array(DUST * 3);
   for (let i = 0; i < DUST; i++) { dustPos[i * 3] = -1.2 + Math.random() * 2.2; dustPos[i * 3 + 1] = 0.85 + Math.random() * 1.1; dustPos[i * 3 + 2] = -0.4 + Math.random() * 1.2; }
   const dustGeo = new THREE.BufferGeometry(); dustGeo.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
-  scene.add(new THREE.Points(dustGeo, new THREE.PointsMaterial({ size: 0.007, color: 0xffe2a8, transparent: true, opacity: 0.55, blending: THREE.AdditiveBlending, depthWrite: false })));
+  const DUST_OPACITY = 0.55;
+  const dustMat = new THREE.PointsMaterial({ size: 0.007, color: 0xffe2a8, transparent: true, opacity: DUST_OPACITY, blending: THREE.AdditiveBlending, depthWrite: false });
+  const dust = new THREE.Points(dustGeo, dustMat);
+  scene.add(dust);
 
   // Ombres sur tout ce qui s'y prête
   scene.traverse((o) => { if ((o as THREE.Mesh).isMesh && o !== hole && o !== glass && o !== sign && o !== stripes && o !== bulb) { o.castShadow = true; o.receiveShadow = true; } });
@@ -279,14 +299,14 @@ async function init() {
   const params = new URLSearchParams(location.search);
   const startPath = (() => { const g = params.get('go'); return g && g.startsWith('/') && !g.startsWith('//') ? g : null; })();
   const wrap = document.createElement('div');
-  wrap.style.cssText = `width:${PAGE_W}px;height:${PAGE_H}px;background:${COLOR.dominant};border-radius:28px;overflow:hidden;`;
+  wrap.style.cssText = `background:${COLOR.dominant};overflow:hidden;`; // taille fixée par fitPage()
   const iframe = document.createElement('iframe');
   iframe.src = startPath ?? '/accueil';
   iframe.title = 'Écran de l’ordinateur : pages du portfolio';
   iframe.style.cssText = 'width:100%;height:100%;border:0;display:block;';
   wrap.append(iframe);
   const css = new CSS3DObject(wrap);
-  css.position.copy(SCREEN_POS); css.scale.setScalar(SCREEN_W / PAGE_W);
+  css.position.copy(SCREEN_POS);
   cssScene.add(css);
 
   /* Une ancre cliquée DANS l'iframe fait aussi défiler les conteneurs parents (scrollIntoView traverse les iframes),
@@ -308,12 +328,30 @@ async function init() {
     return SCREEN_POS.clone().setZ(SCREEN_POS.z + d);
   };
 
+  /* Netteté du texte : l'iframe est dimensionnée à la taille qu'aura l'écran une fois zoomé (en px CSS).
+     En vue zoomée, le navigateur l'affiche donc à l'échelle 1 : aucun rééchantillonnage, texte net.
+     La mise en page suit la largeur (rem en vw) : le rendu reste celui de la maquette.
+     Même parité que la fenêtre → bords de l'écran sur des pixels entiers. */
+  const fitPage = (w: number, h: number) => {
+    const t = Math.tan(THREE.MathUtils.degToRad(ZOOM_FOV) / 2);
+    const d = zoomPos().z - SCREEN_POS.z;
+    let pw = Math.max(PAGE_MIN_W, Math.round((w * SCREEN_W) / (2 * d * t * camera.aspect)));
+    if ((pw - w) % 2) pw++;
+    let ph = Math.round((pw * SCREEN_H) / SCREEN_W);
+    if ((ph - h) % 2) ph++;
+    wrap.style.width = `${pw}px`; wrap.style.height = `${ph}px`;
+    wrap.style.borderRadius = `${Math.round(pw * 0.0146)}px`; // coins arrondis proportionnels (28 px pour 1920 px)
+    css.scale.set(SCREEN_W / pw, SCREEN_H / ph, 1);
+  };
+
   const resize = () => {
     const w = stage.clientWidth, h = stage.clientHeight;
     renderer.setSize(w, h); cssRenderer.setSize(w, h);
     camera.aspect = w / h; camera.updateProjectionMatrix();
+    fitPage(w, h);
     if (state === 'screen') rig.pos.copy(zoomPos());
     else if (state === 'idle') rig.pos.copy(idlePos());
+    invalidate();
   };
   new ResizeObserver(resize).observe(stage);
   resize();
@@ -327,10 +365,20 @@ async function init() {
     gsap.to(camera, { fov: to.fov, duration: d, ease, onUpdate: () => camera.updateProjectionMatrix(), onComplete: done });
   };
 
+  /* Poussière : une fois zoomé, le décor n'est plus redessiné (rendu à la demande) → les particules devant
+     l'écran resteraient figées par-dessus la page. On les estompe pendant le zoom et on les rallume en reculant. */
+  const fadeDust = (to: number, duration: number) => {
+    dust.visible = true;
+    gsap.to(dustMat, { opacity: to, duration: reduced ? 0.01 : duration, ease: 'power2.inOut', overwrite: true,
+      onComplete: () => { dust.visible = to > 0; } });
+  };
+
   const zoomIn = () => {
     if (state !== 'idle' && state !== 'intro') return;
     setState('moving');
+    fadeDust(0, 1.2);
     fly({ pos: zoomPos(), look: SCREEN_POS, fov: ZOOM_FOV, parallax: 0 }, 1.8, 'power3.inOut', () => {
+      dust.visible = false; // au cas où le fondu ne serait pas tout à fait fini
       setState('screen');
       renderer.domElement.style.pointerEvents = 'none'; // les clics traversent le canvas → iframe utilisable
       iframe.focus();
@@ -341,6 +389,7 @@ async function init() {
     setState('moving');
     renderer.domElement.style.pointerEvents = 'auto';
     (document.activeElement as HTMLElement | null)?.blur();
+    fadeDust(DUST_OPACITY, 1.2);
     fly({ pos: idlePos(), look: IDLE_LOOK, fov: IDLE_FOV, parallax: 1 }, 1.5, 'power3.inOut', () => setState('idle'));
   };
 
@@ -371,8 +420,12 @@ async function init() {
 
   /* ───────────── Boucle de rendu ───────────── */
   const clock = new THREE.Clock();
+  const dustAttr = dustGeo.attributes.position as THREE.BufferAttribute;
+  const steamMats = steam.map((s) => s.material as THREE.SpriteMaterial);
   renderer.setAnimationLoop(() => {
     const t = clock.getElapsedTime();
+    if (state === 'screen' && !needsRender) return;
+    needsRender = false;
     pointer.sx += (pointer.x - pointer.sx) * 0.05; pointer.sy += (pointer.y - pointer.sy) * 0.05;
     const w = reduced ? 0 : rig.parallax;
     camera.position.set(rig.pos.x + pointer.sx * 0.28 * w, rig.pos.y - pointer.sy * 0.1 * w + Math.sin(t * 0.6) * 0.004 * w, rig.pos.z);
@@ -381,16 +434,16 @@ async function init() {
     steam.forEach((s, i) => {
       const k = (t * 0.22 + i / steam.length) % 1;
       s.position.set(mug.position.x + Math.sin(k * 7 + i) * 0.012, 0.85 + k * 0.24, mug.position.z);
-      s.scale.setScalar(0.03 + k * 0.08); (s.material as THREE.SpriteMaterial).opacity = Math.sin(k * Math.PI) * 0.2;
+      s.scale.setScalar(0.03 + k * 0.08); steamMats[i].opacity = Math.sin(k * Math.PI) * 0.2;
     });
     if (!reduced) {
-      const p = dustGeo.attributes.position as THREE.BufferAttribute;
-      for (let i = 0; i < DUST; i++) {
-        p.setY(i, p.getY(i) + 0.0002 + Math.sin(t + i) * 0.00008);
-        p.setX(i, p.getX(i) + Math.cos(t * 0.5 + i) * 0.00008);
-        if (p.getY(i) > 1.95) p.setY(i, 0.85);
+      const a = dustPos; // accès direct au tableau : évite ~900 appels get/set par image
+      for (let i = 0, j = 0; i < DUST; i++, j += 3) {
+        a[j] += Math.cos(t * 0.5 + i) * 0.00008;
+        const y = a[j + 1] + 0.0002 + Math.sin(t + i) * 0.00008;
+        a[j + 1] = y > 1.95 ? 0.85 : y;
       }
-      p.needsUpdate = true;
+      dustAttr.needsUpdate = true;
     }
     lamp.intensity = 14 + Math.sin(t * 3.1) * 0.15; // léger scintillement
     screenLight.intensity = 0.28 + Math.sin(t * 1.7) * 0.02;
@@ -403,7 +456,9 @@ async function init() {
 
   /* ───────────── Intro ───────────── */
   setState('intro');
-  loader.style.opacity = '0'; setTimeout(() => loader.remove(), 800);
+  loader.style.opacity = '0';
+  loader.addEventListener('transitionend', () => loader.remove(), { once: true });
+  setTimeout(() => loader.remove(), 1000); // filet de sécurité si la transition ne se déclenche pas
   fly({ pos: idlePos(), look: IDLE_LOOK, fov: IDLE_FOV, parallax: 1 }, 3, 'power3.out', () => {
     if (state === 'intro') setState('idle');
     if (startPath) zoomIn(); // lien direct vers une page : on entre tout de suite dans l'écran

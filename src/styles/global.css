@@ -9,6 +9,7 @@
   --font-titre: "Emblema One", Georgia, serif;
   --font-tag: "Idiqlat", "Cormorant Garamond", Georgia, serif; /* Idiqlat n'est pas libre : Cormorant en substitut */
   --font-corps: "Inter", system-ui, sans-serif;
+  --ease-soft: cubic-bezier(.2, .7, .2, 1); /* départ vif, arrivée douce : toutes les micro-animations */
 }
 
 /* Transition douce entre pages (Chrome / Safari 18.2+), y compris dans l'écran 3D */
@@ -21,54 +22,81 @@
 @layer base {
   html { background: var(--color-header); scroll-behavior: smooth; scroll-padding-top: calc(var(--header-h, 5rem) + 4.5rem); }
   /* Maquette dessinée en 1920 px : tout est en rem, la racine suit la largeur de la fenêtre (16 px à 1920, jamais < 12 px).
-     Dans l'écran 3D (iframe de 1920 px) le rendu est donc identique à la maquette. */
+     Dans l'écran 3D, l'iframe (dimensionnée par scene.ts) garde donc les proportions de la maquette. */
   @media (min-width: 64rem) { html { font-size: clamp(12px, 0.8334vw, 16px); } }
   body { @apply bg-dominant font-corps text-secondaire antialiased; }
   :focus-visible { outline: 2px solid var(--color-tonique); outline-offset: 3px; }
   @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }
+    *, *::before, *::after { animation-duration: .01ms !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; transition-delay: 0s !important; scroll-behavior: auto !important; }
   }
 }
 
 /* Composants : @utility pour pouvoir les combiner avec @apply et les variants (hover:, aria-selected:…) */
-@utility panel { @apply relative border border-tonique bg-black/20 shadow-[inset_0_0_20px_rgba(0,0,0,.25)]; }
+/* Fonds sombres transparents : léger flou de ce qui passe derrière (rayures animées) */
+@utility panel { @apply relative border border-tonique bg-black/20 shadow-[inset_0_0_20px_rgba(0,0,0,.25)] backdrop-blur-xs; }
 @utility gradient-gold {
   background-image: linear-gradient(rgba(0,0,0,.2), rgba(0,0,0,.2)),
     linear-gradient(208deg, #997643 0%, #795932 25%, var(--color-dominant) 100%);
 }
 @utility btn {
-  @apply gradient-gold inline-flex items-center justify-center rounded-[10px] border border-tonique px-5 py-2.5 font-titre text-xl text-secondaire transition hover:-translate-y-0.5 hover:brightness-125 lg:text-2xl;
+  @apply gradient-gold inline-flex items-center justify-center rounded-[10px] border border-tonique px-5 py-2.5 font-titre text-xl text-secondaire transition duration-300 ease-soft hover:-translate-y-0.5 hover:brightness-125 hover:shadow-[0_8px_20px_rgba(0,0,0,.35)] active:translate-y-0 active:brightness-110 active:duration-100 lg:text-2xl;
 }
 @utility btn-sm {
-  @apply gradient-gold inline-flex items-center justify-center rounded-[10px] border border-tonique px-4 py-1.5 font-titre text-base italic text-secondaire transition hover:-translate-y-0.5 hover:brightness-125 lg:text-lg;
+  @apply gradient-gold inline-flex items-center justify-center rounded-[10px] border border-tonique px-4 py-1.5 font-titre text-base italic text-secondaire transition duration-300 ease-soft hover:-translate-y-0.5 hover:brightness-125 hover:shadow-[0_8px_20px_rgba(0,0,0,.35)] active:translate-y-0 active:brightness-110 active:duration-100 lg:text-lg;
 }
 @utility pill {
-  @apply cursor-pointer rounded-full border border-tonique/80 bg-black/20 px-3 py-0.5 text-center font-tag text-lg text-secondaire transition hover:bg-tonique/20 aria-pressed:bg-tonique aria-pressed:text-header;
+  @apply cursor-pointer rounded-full border border-tonique/80 bg-black/20 px-3 py-0.5 text-center font-tag text-lg text-secondaire transition duration-200 ease-soft hover:border-tonique hover:bg-tonique/20 active:scale-95 aria-pressed:bg-tonique aria-pressed:text-header;
 }
 @utility snav {
-  @apply relative z-10 cursor-pointer whitespace-nowrap border border-tonique bg-black/20 px-4 py-1 text-center font-semibold text-secondaire transition hover:bg-tonique/15 aria-[current=true]:gradient-gold lg:px-8;
+  @apply relative z-10 cursor-pointer whitespace-nowrap border border-tonique bg-black/20 backdrop-blur-xs px-4 py-1 text-center font-semibold text-secondaire transition duration-300 ease-soft hover:bg-tonique/15 active:scale-[.97] aria-[current=true]:gradient-gold lg:px-8;
+}
+@utility link-underline {
+  position: relative;
+  &::after {
+    content: ""; position: absolute; inset-inline: 0; bottom: -.1em; height: 1px; background: currentColor;
+    transform: scaleX(0); transition: transform .35s var(--ease-soft);
+  }
+  &:hover::after, &:focus-visible::after, &[aria-current='page']::after { transform: scaleX(1); }
+}
+/* Liste d'étiquettes « A • B • C » : point crème avant chaque étiquette sauf la première (même espacement que gap-x-2.5) */
+@utility tag-list {
+  & > li { display: inline-flex; align-items: center; }
+  & > li + li::before {
+    content: ""; width: .3125rem; height: .3125rem; margin-right: .625rem; border-radius: 9999px;
+    background: var(--color-secondaire); flex-shrink: 0;
+  }
 }
 @utility rich { & strong { @apply font-bold text-tonique; } }
 @utility h-section { @apply mb-2 font-titre text-xl italic lg:text-2xl; }
 @utility field { @apply w-full border border-tonique/80 bg-dominant px-5 py-2.5 text-secondaire placeholder:text-secondaire/70 focus:bg-header; font-size: max(1rem, 15px); }
 
-/* Rayures dorées des coins (motif de la maquette) */
+/* Rayures dorées des coins (motif de la maquette).
+   Les lignes partent du coin et glissent vers l'intérieur de la page en boucle infinie ;
+   le masque (fixe) les fait s'estomper jusqu'à disparaître.
+   --stripe-shift décale le motif d'une période (16 px) par cycle → boucle sans à-coup. */
+@property --stripe-shift { syntax: "<length>"; inherits: false; initial-value: 0px; }
+/* Les rayures sont FIXES : collées aux coins de l'écran, elles ne défilent pas avec la page. */
 @utility stripes {
   position: relative; isolation: isolate; overflow: clip;
   &::before, &::after {
-    content: ""; position: absolute; z-index: -1; pointer-events: none;
-    width: min(42vw, 560px); aspect-ratio: 1;
-    background: repeating-linear-gradient(35deg, transparent 0 13px, rgb(230 194 128 / .85) 13px 16px);
+    content: ""; position: fixed; z-index: -1; pointer-events: none;
+    width: min(58vw, 780px); aspect-ratio: 1;
+    background: repeating-linear-gradient(35deg,
+      transparent var(--stripe-shift) calc(var(--stripe-shift) + 13px),
+      rgb(230 194 128 / .85) calc(var(--stripe-shift) + 13px) calc(var(--stripe-shift) + 16px));
+    animation: stripes-flow 1.4s linear infinite;
   }
-  &::before { left: 0; bottom: 0; mask-image: linear-gradient(to top right, #000, transparent 65%); }
-  &::after { right: 0; top: 0; mask-image: linear-gradient(to bottom left, #000, transparent 65%); }
+  /* bas-gauche : le dégradé à 35° pointe vers le haut-droite → les lignes montent vers l'intérieur */
+  /* Fondu circulaire depuis le coin : totalement transparent AVANT les bords du carré → aucune coupure nette */
+  &::before { left: 0; bottom: 0; mask-image: radial-gradient(farthest-side at 0 100%, #000, rgb(0 0 0 / .45) 35%, transparent 80%); }
+  /* haut-droite : même motif joué à l'envers → les lignes descendent vers l'intérieur */
+  &::after { right: 0; top: 0; mask-image: radial-gradient(farthest-side at 100% 0, #000, rgb(0 0 0 / .45) 35%, transparent 80%); animation-direction: reverse; }
 }
+@keyframes stripes-flow { to { --stripe-shift: 16px; } }
 
 /* Révélation ligne par ligne du faux éditeur de code */
 @utility line { display: block; white-space: pre; animation: reveal .7s steps(32) both; animation-delay: calc(var(--i) * .32s + .3s); }
 @keyframes reveal { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
-@utility caret { display: inline-block; width: .6ch; height: 1.1em; background: var(--color-tonique); vertical-align: text-bottom; animation: blink 1s steps(1) infinite; }
-@keyframes blink { 50% { opacity: 0; } }
 
 /* Grain & vignette de la scène 3D */
 @utility grain {
@@ -78,6 +106,15 @@
 @utility vignette { background: radial-gradient(ellipse at center, transparent 50%, rgba(15,8,3,.7) 100%); }
 
 /* ───────── Animations de navigation ───────── */
+/* Menu mobile : fondu de l'arrière-plan, liens qui montent en cascade. « visibility » le retire du clavier une fois fermé. */
+#menu { opacity: 0; visibility: hidden; transition: opacity .35s var(--ease-soft), visibility 0s linear .35s; }
+#menu[data-open] { opacity: 1; visibility: visible; transition: opacity .35s var(--ease-soft); }
+#menu li, #menu > p { opacity: 0; transform: translateY(18px); transition: opacity .3s, transform .3s var(--ease-soft); }
+#menu[data-open] li, #menu[data-open] > p { opacity: 1; transform: none; transition: opacity .45s, transform .55s var(--ease-soft); transition-delay: calc(var(--i, 4) * 60ms + 120ms); }
+#menu-close { transform: scale(.6) rotate(-90deg); opacity: 0; }
+#menu[data-open] #menu-close { transform: none; opacity: 1; transition: transform .45s var(--ease-soft) .1s, opacity .3s .1s, background-color .3s, color .3s; }
+#menu[data-open] #menu-close:hover { transform: rotate(90deg); }
+
 html.embed .embed-hide { display: none; }
 
 /* Rideau doré : se retire à l'arrivée sur la page, se referme au départ (cf. scripts/page.ts) */
@@ -89,18 +126,22 @@ html.embed .embed-hide { display: none; }
 html.leaving .wipe { animation: wipe-in .38s cubic-bezier(.76, 0, .24, 1) both; }
 @keyframes wipe-out { from { transform: translateX(0); } to { transform: translateX(101%); } }
 @keyframes wipe-in { from { transform: translateX(-101%); } to { transform: translateX(0); } }
-html.leaving #contenu { animation: page-out .38s ease-in both; }
+/* Pas de transform/filter sur un PARENT des rayures fixes (ça les décrocherait de l'écran) : on anime leur contenu. */
+html.leaving #contenu > :not(.stripes), html.leaving #contenu > .stripes > * { animation: page-out .38s ease-in both; }
 @keyframes page-out { to { opacity: 0; transform: scale(.985); filter: blur(4px); } }
 
 /* Entrée des éléments (délai = --d × 90 ms, après le rideau) */
-.reveal { animation: rise .8s cubic-bezier(.2, .7, .2, 1) both; animation-delay: calc(var(--d, 0) * 90ms + 320ms); }
+/* « backwards » et non « both » : une fois finie, l'animation ne reste pas active. Sinon le navigateur isole
+   l'élément et le flou d'arrière-plan (backdrop-blur) des panneaux qu'il contient ne voit plus les rayures. */
+.reveal { animation: rise .8s cubic-bezier(.2, .7, .2, 1) backwards; animation-delay: calc(var(--d, 0) * 90ms + 320ms); }
 @keyframes rise { from { opacity: 0; transform: translateY(28px); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
 
 /* Barre d'ancres : l'indicateur doré coulisse sous le lien actif (JS) ; sans JS, le lien actif garde son dégradé */
 nav[data-ind] [data-indicator] { display: block; }
-nav[data-ind] .snav[aria-current='true'] { background-image: none; background-color: transparent; border-color: transparent; }
-nav[data-ind] .snav { transition: color .3s; }
-nav[data-ind] .snav[aria-current='true'] { font-weight: 700; }
+/* La barre elle-même n'a ni fond ni flou (même collée sous l'en-tête) : seuls les boutons ont leur style.
+   Lien actif : fond retiré (l'indicateur doré est dessous) et pas de flou, qui brouillerait cet indicateur. */
+nav[data-ind] .snav[aria-current='true'] { background-image: none; background-color: transparent; border-color: transparent; backdrop-filter: none; font-weight: 700; }
+nav[data-ind] .snav { transition: color .3s, background-color .3s, border-color .3s, transform .2s; }
 [data-indicator].is-ready { transition: transform .35s cubic-bezier(.3, .7, .2, 1), width .35s cubic-bezier(.3, .7, .2, 1), height .35s; }
 /* Section visible : sa puce s'illumine */
 section[data-active] > h2 > span { transform: scale(1.5); box-shadow: 0 0 14px var(--color-tonique); }

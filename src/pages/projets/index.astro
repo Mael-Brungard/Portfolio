@@ -28,11 +28,12 @@ const groups = [
             {contexts.map((c) => <button type="button" class="pill" data-context={c.id} aria-pressed="false">{c.label}</button>)}
           </div>
         </fieldset>
-        <button type="reset" id="reset" class="font-tag text-lg underline-offset-2 hover:underline">Tout afficher</button>
+        <button type="reset" id="reset" class="link-underline mx-auto w-fit font-tag text-lg transition-colors duration-300 hover:text-tonique">Effacer les filtres</button>
       </form>
     </aside>
 
-    <div class="flex flex-col gap-10">
+    <!-- relative : repère des éléments qui sortent pendant l'animation de filtrage (épinglés en absolu) -->
+    <div data-results class="relative flex flex-col gap-10">
       <h1 class="sr-only">Tous mes projets</h1>
       {groups.map((g) => (
         <section data-group aria-labelledby={`h-${g.id}`}>
@@ -47,23 +48,119 @@ const groups = [
 
 <script>
   // Filtres : un projet est visible s'il a AU MOINS un des skills choisis ET correspond à un des contextes choisis.
-  const cards = [...document.querySelectorAll<HTMLElement>('[data-card]')];
-  const groups = [...document.querySelectorAll<HTMLElement>('[data-group]')];
+  const cards = [...document.querySelectorAll<HTMLElement>('[data-card]')].map((el) => ({
+    el, skills: el.dataset.skills!.split('|'), context: el.dataset.context!, // lus une seule fois
+  }));
+  const groups = [...document.querySelectorAll<HTMLElement>('[data-group]')].map((el) => ({
+    el, cards: cards.filter((c) => el.contains(c.el)),
+  }));
   const pills = [...document.querySelectorAll<HTMLButtonElement>('.pill')];
   const empty = document.getElementById('empty')!;
 
   const active = (attr: 'skill' | 'context') =>
     pills.filter((p) => p.getAttribute('aria-pressed') === 'true' && p.dataset[attr]).map((p) => p.dataset[attr]!);
 
+  /* ───── Animation du filtrage (technique FLIP) ─────
+     1. on mémorise la position de tout ce qui est visible ;
+     2. ce qui sort est « épinglé » en absolu à sa place (il ne pèse plus dans la mise en page) et s'évanouit ;
+     3. on applique le nouveau filtrage, puis chaque élément resté visible glisse de son ancienne à sa nouvelle place ;
+     4. ce qui apparaît surgit en cascade. Un nouveau clic termine net l'animation en cours avant de repartir. */
+  const results = document.querySelector<HTMLElement>('[data-results]')!;
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const EASE = 'cubic-bezier(.2, .7, .2, 1)';
+  let running: Animation[] = [];
+  let cleanups: (() => void)[] = [];
+
+  const matches = (c: (typeof cards)[number], sk: string[], cx: string[]) =>
+    (!sk.length || sk.some((s) => c.skills.includes(s))) && (!cx.length || cx.includes(c.context));
+
   const apply = () => {
     const sk = active('skill'), cx = active('context');
+    const show = new Map(cards.map((c) => [c.el, matches(c, sk, cx)]));
+    const groupShow = new Map(groups.map((g) => [g.el, g.cards.some((c) => show.get(c.el))]));
+    const anyShown = [...show.values()].some(Boolean);
+
+    const commit = () => {
+      cards.forEach((c) => (c.el.hidden = !show.get(c.el)));
+      groups.forEach((g) => (g.el.hidden = !groupShow.get(g.el)));
+      empty.hidden = anyShown;
+    };
+    if (reduced) return commit();
+
+    // Nouveau clic pendant une animation : on la termine net et on nettoie tout de suite (synchrone)
+    running.forEach((a) => a.cancel()); running = [];
+    cleanups.forEach((fn) => fn()); cleanups = [];
+
+    // Éléments suivis : cartes, titres de rubrique, message « aucun projet »
+    const heads = groups.map((g) => g.el.querySelector<HTMLElement>('h2')!);
+    const tracked = [...cards.map((c) => c.el), ...heads, empty];
+    const first = new Map<HTMLElement, DOMRect>();
+    for (const el of tracked) if (el.offsetParent) first.set(el, el.getBoundingClientRect());
+
+    // Ce qui sort : rubriques entières qui se vident, cartes isolées dans une rubrique qui reste, message vide
+    const leaving: HTMLElement[] = [];
+    groups.forEach((g) => { if (!g.el.hidden && !groupShow.get(g.el)) leaving.push(g.el); });
     cards.forEach((c) => {
-      const okS = !sk.length || sk.some((s) => c.dataset.skills!.split('|').includes(s));
-      const okC = !cx.length || cx.includes(c.dataset.context!);
-      c.hidden = !(okS && okC);
+      const grp = groups.find((g) => g.cards.includes(c))!;
+      if (!c.el.hidden && !show.get(c.el) && groupShow.get(grp.el)) leaving.push(c.el);
     });
-    groups.forEach((g) => (g.hidden = ![...g.querySelectorAll<HTMLElement>('[data-card]')].some((c) => !c.hidden)));
-    empty.hidden = cards.some((c) => !c.hidden);
+    if (!empty.hidden && anyShown) leaving.push(empty);
+
+    // Épingler ce qui sort à sa position actuelle
+    const box = results.getBoundingClientRect();
+    const savedStyle = new Map(leaving.map((el) => [el, el.getAttribute('style')]));
+    for (const el of leaving) {
+      const r = el.getBoundingClientRect();
+      Object.assign(el.style, {
+        position: 'absolute', top: `${r.top - box.top}px`, left: `${r.left - box.left}px`,
+        width: `${r.width}px`, height: `${r.height}px`, margin: '0', pointerEvents: 'none', zIndex: '0',
+      });
+    }
+
+    // Nouvel état (les éléments épinglés restent affichés jusqu'à la fin de leur sortie)
+    cards.forEach((c) => { if (!leaving.includes(c.el) && !leaving.some((l) => l.contains(c.el))) c.el.hidden = !show.get(c.el); });
+    groups.forEach((g) => { if (groupShow.get(g.el)) g.el.hidden = false; });
+    if (!anyShown) empty.hidden = false;
+
+    // Sorties : rétrécit, s'estompe et se floute
+    for (const el of leaving) {
+      const a = el.animate(
+        [{ opacity: 1, transform: 'none', filter: 'blur(0)' }, { opacity: 0, transform: 'scale(.82) translateY(10px)', filter: 'blur(6px)' }],
+        { duration: 320, easing: 'cubic-bezier(.4, 0, 1, 1)', fill: 'forwards' },
+      );
+      let done = false;
+      const cleanup = () => {
+        if (done) return; done = true;
+        a.cancel();
+        const st = savedStyle.get(el); st == null ? el.removeAttribute('style') : el.setAttribute('style', st); // styles d'origine (ex. --d)
+        el.hidden = true;
+        if (el.matches('[data-group]')) el.querySelectorAll<HTMLElement>('[data-card]').forEach((c) => (c.hidden = !show.get(c)));
+      };
+      a.finished.then(cleanup, () => {}); // annulée par un nouveau clic : nettoyage déjà fait via cleanups
+      cleanups.push(cleanup);
+      running.push(a);
+    }
+
+    // Déplacements et entrées
+    let n = 0;
+    for (const el of tracked) {
+      if (leaving.includes(el) || leaving.some((l) => l.contains(el)) || !el.offsetParent) continue;
+      const last = el.getBoundingClientRect();
+      const was = first.get(el);
+      if (was) {
+        const dx = was.left - last.left, dy = was.top - last.top;
+        if (Math.abs(dx) < 1 && Math.abs(dy) < 1) continue;
+        running.push(el.animate(
+          [{ transform: `translate(${dx}px, ${dy}px)` }, { transform: 'none' }],
+          { duration: 650, easing: EASE },
+        ));
+      } else {
+        running.push(el.animate(
+          [{ opacity: 0, transform: 'translateY(26px) scale(.86)', filter: 'blur(8px)' }, { opacity: 1, transform: 'none', filter: 'blur(0)' }],
+          { duration: 600, delay: 140 + n++ * 55, easing: EASE, fill: 'backwards' },
+        ));
+      }
+    }
   };
 
   pills.forEach((p) => p.addEventListener('click', () => { p.setAttribute('aria-pressed', String(p.getAttribute('aria-pressed') !== 'true')); apply(); }));

@@ -1,5 +1,4 @@
 export const site = {
-  name: 'Maël Brungard',
   email: 'mael.brungard@gmail.com',
   phone: '06 81 56 63 87',
   city: '25200 Montbéliard',
@@ -16,12 +15,12 @@ export const nav = [
 export const stack = ['NodeJS', 'SQL', 'Apache2', 'GitHub', 'Tailwind', 'JavaScript', 'Figma'];
 export const accent = ['Tailwind', 'JavaScript', 'Figma'];
 
-/* À propos — l'onglet « Qui suis-je ? » vient de la maquette, les deux autres sont à personnaliser */
+/* À propos — une entrée par section de la page (Qui suis-je ? / Entrepreneur / Étudiant), chacune en deux colonnes */
 export const about = {
   qui: [
     [
       { title: 'Le commencement', text: 'Depuis mes 15 ans je m’entraîne au **développement WEB** d’abord en tant que **loisir** puis en tant que **profession**.' },
-      { title: 'Mes forces', text: 'Là où une IA vous rendra un site WEB, je vous rendrai un **produit fini** et pensé pour vos besoins et adapté à vos critères.\nLà où un développeur vous rendra un produit fini, je vous rendrai une **expérience client** agréable afin de fusionner votre vision et mon **savoir-faire** pour créer le meilleur produit dans les meilleures conditions.' },
+      { title: 'Mes forces', text: 'Là où d’autres laissent l’IA faire le site, je l’utilise comme un **accélérateur** pour vous livrer un **produit fini**, pensé pour vos besoins et adapté à vos critères.\nEt là où un développeur s’arrête au produit, je vous offre aussi une **expérience client** agréable, pour fusionner votre vision et mon **savoir-faire** et créer le meilleur produit dans les meilleures conditions.' },
     ],
     [
       { title: 'Motivation', text: 'Mon **ambition** et ma **motivation** m’ont toujours poussé à me **surpasser** pour me démarquer.\nToujours à la recherche de **nouvelles compétences**, j’aime **découvrir** de nouvelles technologies et **apprendre** à utiliser de nouveaux outils.' },

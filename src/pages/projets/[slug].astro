@@ -2,6 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import Tags from '../../components/Tags.astro';
 import SectionNav from '../../components/SectionNav.astro';
+import Carousel from '../../components/Carousel.astro';
 import { getProjects } from '../../lib/db';
 import { accent } from '../../data/content';
 import { rich } from '../../lib/rich';
@@ -10,7 +11,12 @@ export function getStaticPaths() {
   return getProjects().map((p) => ({ params: { slug: p.slug }, props: { p } }));
 }
 const { p } = Astro.props;
-const sections = [{ id: 'contexte', label: 'Contexte' }, { id: 'processus', label: 'Processus' }, { id: 'galerie', label: 'Galerie' }];
+// La rubrique Galerie (section, bouton de la barre d'ancres, lien du pied de page) n'existe que si le projet a des images
+const sections = [
+  { id: 'contexte', label: 'Contexte' },
+  { id: 'processus', label: 'Processus' },
+  ...(p.galerie.length ? [{ id: 'galerie', label: 'Galerie' }] : []),
+];
 const footerLinks = sections.map((t) => ({ label: t.label, href: `#${t.id}` }));
 const label = p.context === 'Personnel' || p.context === 'Professionnel' ? p.context : 'Projet scolaire';
 const plain = p.summary.replace(/\*\*/g, '');
@@ -18,9 +24,11 @@ const plain = p.summary.replace(/\*\*/g, '');
 <Base title={`${p.title} — Maël Brungard`} description={plain} current="Projets" footerLinks={footerLinks}
   crumb={[{ label: 'Projets', href: '/projets' }, { label: p.title }]}>
   <div class="stripes px-5 py-8 lg:grid lg:grid-cols-[18.4375rem_1fr] lg:gap-6 lg:px-[3.125rem]">
-    <div class="reveal lg:pt-8"><a href="/accueil" class="btn-sm mb-6 w-fit lg:mx-auto lg:flex">Retour</a></div>
+    <!-- Grand écran : le bouton Retour suit le défilement (collé sous l'en-tête) pour rester toujours visible -->
+    <div class="reveal lg:sticky lg:top-[var(--header-h,5rem)] lg:self-start lg:pt-8"><a href="/projets" class="btn-sm mb-6 w-fit lg:mx-auto lg:flex">Retour</a></div>
 
-    <article class="lg:max-w-[92rem]">
+    <!-- min-w-0 : sans ça, la colonne de grille s'élargit à la largeur de toutes les images du carrousel -->
+    <article class="min-w-0 lg:max-w-[92rem]">
       <header class="flex flex-col-reverse items-start justify-between gap-6 lg:flex-row">
         <div class="max-w-[55rem] space-y-3">
           <p style="--d:0" class="reveal font-tag text-xl font-semibold uppercase text-tonique lg:text-2xl">{label}</p>
@@ -42,9 +50,7 @@ const plain = p.summary.replace(/\*\*/g, '');
               <span aria-hidden="true" class="size-3 rounded-full bg-tonique"></span>{t.label}
             </h2>
             {t.id === 'galerie' ? (
-              p.galerie.length
-                ? <ul class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{p.galerie.map((g) => <li><img src={g.src} alt={g.alt} loading="lazy" class="panel w-full" /></li>)}</ul>
-                : <p class="panel p-6 font-tag text-xl">Galerie en cours de préparation.</p>
+              <Carousel images={p.galerie} label={`Galerie du projet ${p.title}`} />
             ) : p[t.id as 'contexte' | 'processus'].length ? (
               <div class="grid gap-x-12 gap-y-8 lg:grid-cols-2">
                 {p[t.id as 'contexte' | 'processus'].map((s) => (

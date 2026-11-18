@@ -4,9 +4,15 @@ import type { Project } from '../lib/db';
 interface Props { p: Project; i?: number }
 const { p, i = 0 } = Astro.props;
 ---
-<li data-card data-skills={p.tags.join('|')} data-context={p.contextId} class="reveal" style={`--d:${i + 2}`}>
-  <a href={`/projets/${p.slug}`} class="panel group flex h-full flex-col items-center gap-3 p-5 text-center transition hover:-translate-y-1 hover:bg-tonique/10 hover:shadow-[0_10px_30px_rgba(0,0,0,.4)]">
-    <img src={p.logo} alt="" width="200" height="200" loading="lazy" class="h-[12.5rem] w-[12.5rem] object-contain transition duration-300 group-hover:scale-105" />
+<li data-card data-skills={[...new Set([...p.tags, ...p.stack])].join('|')} data-context={p.contextId} class="reveal" style={`--d:${i + 2}`}>
+  <a href={`/projets/${p.slug}`} class="panel group flex h-full flex-col items-center gap-3 p-5 text-center transition duration-300 ease-soft hover:-translate-y-1 hover:bg-tonique/10 hover:shadow-[0_10px_30px_rgba(0,0,0,.4)] focus-visible:-translate-y-1 active:translate-y-0 active:duration-100">
+    {p.galerie.length > 0 && ( // projet avec galerie → sticker « Mis en avant » collé de travers, qui déborde du coin
+      <span class="absolute -right-4 -top-3 z-10 flex rotate-[9deg] items-center gap-1.5 rounded-[4px] border border-header/25 bg-tonique px-3.5 py-1 font-tag text-base font-bold text-header shadow-[2px_6px_14px_rgba(0,0,0,.55)] transition duration-300 group-hover:rotate-[4deg] group-hover:scale-105 lg:text-lg">
+        <svg aria-hidden="true" viewBox="0 0 12 12" class="size-3" fill="currentColor"><path d="M6 .5l1.6 3.4 3.7.4-2.8 2.5.8 3.7L6 8.6 2.7 10.5l.8-3.7L.7 4.3l3.7-.4z" /></svg>
+        Mis en avant
+      </span>
+    )}
+    <img src={p.logo} alt="" width="200" height="200" loading="lazy" decoding="async" class="h-[12.5rem] w-[12.5rem] object-contain transition-transform duration-500 ease-soft group-hover:-rotate-2 group-hover:scale-105" />
     <Tags tags={p.tags} class="justify-center text-lg" />
     <h3 class="font-titre text-xl italic leading-tight lg:text-2xl">{p.title}</h3>
     <p class="mt-auto font-tag text-xl font-semibold lg:text-2xl">{p.context}</p>

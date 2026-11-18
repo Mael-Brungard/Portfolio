@@ -1,1 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="14" fill="#1f130b"/><text x="32" y="43" text-anchor="middle" font-family="Georgia,serif" font-weight="700" font-size="30" fill="#e6c280">MB</text></svg>
+<svg width="227" height="227" viewBox="0 0 227 227" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="227" height="227" fill="#332013"/>
+<path d="M184.744 154.281H60.9263V161.16H209.312V154.281L85.4934 30.4632H60.9263L184.744 154.281Z" fill="#F2F1DF"/>
+<path d="M155.264 173.935H31.4458V180.814H179.831V173.935L56.0129 50.1169H31.4458L155.264 173.935Z" fill="#E6C280"/>
+</svg>

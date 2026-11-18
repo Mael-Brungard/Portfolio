@@ -1,0 +1,67 @@
+---
+// Galerie en carrousel horizontal : images de même hauteur, flèches dorées de chaque côté (maquette).
+// Défilement aussi au doigt / trackpad / clavier (flèches ← → quand la galerie a le focus), avec « snap » sur chaque image.
+interface Props { images: { src: string; alt: string }[]; label: string }
+const { images, label } = Astro.props;
+// Flèches : halo doré + léger glissement vers leur direction au survol, enfoncement au clic
+const arrow = 'group/arrow absolute top-1/2 z-10 grid size-10 -translate-y-1/2 place-items-center text-tonique transition duration-300 ease-soft hover:scale-110 hover:drop-shadow-[0_0_10px_rgba(230,194,128,.55)] active:scale-90 active:duration-100 disabled:pointer-events-none disabled:opacity-25 lg:size-12';
+---
+<div data-carousel role="region" aria-roledescription="carrousel" aria-label={label} class="relative px-10 lg:px-14">
+  <button type="button" data-prev aria-label="Image précédente" class={`${arrow} left-0`} disabled>
+    <svg aria-hidden="true" viewBox="0 0 24 24" class="size-8 transition-transform duration-300 ease-soft group-hover/arrow:-translate-x-0.5 lg:size-10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 5-7 7 7 7" /></svg>
+  </button>
+  <ul data-track tabindex="0" class="-my-3 flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain py-3 outline-offset-4 [scrollbar-width:none] lg:gap-6 [&::-webkit-scrollbar]:hidden">
+    {images.map((g, i) => (
+      <li class="shrink-0 snap-start" aria-label={`${i + 1} sur ${images.length}`}>
+        <img src={g.src} alt={g.alt} loading="lazy" decoding="async" draggable="false"
+          class="panel block h-64 w-auto max-w-[75vw] object-contain transition duration-300 ease-soft hover:-translate-y-1 hover:shadow-[0_10px_24px_rgba(0,0,0,.45)] sm:h-80 lg:h-[26rem] lg:max-w-none" />
+      </li>
+    ))}
+  </ul>
+  <button type="button" data-next aria-label="Image suivante" class={`${arrow} right-0`}>
+    <svg aria-hidden="true" viewBox="0 0 24 24" class="size-8 transition-transform duration-300 ease-soft group-hover/arrow:translate-x-0.5 lg:size-10" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 5 7 7-7 7" /></svg>
+  </button>
+</div>
+
+<script>
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  document.querySelectorAll<HTMLElement>('[data-carousel]').forEach((root) => {
+    const track = root.querySelector<HTMLElement>('[data-track]')!;
+    const prev = root.querySelector<HTMLButtonElement>('[data-prev]')!;
+    const next = root.querySelector<HTMLButtonElement>('[data-next]')!;
+
+    // Flèches désactivées aux extrémités, masquées si tout tient à l'écran
+    let queued = false;
+    const update = () => {
+      queued = false;
+      const max = track.scrollWidth - track.clientWidth;
+      prev.disabled = track.scrollLeft <= 1;
+      next.disabled = track.scrollLeft >= max - 1;
+      prev.hidden = next.hidden = max <= 1;
+    };
+    const queue = () => { if (!queued) { queued = true; requestAnimationFrame(update); } };
+
+    // Une flèche avance jusqu'à l'image suivante (ou précédente) non entièrement visible
+    const go = (dir: 1 | -1) => {
+      const items = [...track.children] as HTMLElement[];
+      const left = track.scrollLeft, right = left + track.clientWidth;
+      const pos = (el: HTMLElement) => el.offsetLeft - track.offsetLeft;
+      const target = dir > 0
+        ? items.find((el) => pos(el) + el.offsetWidth > right + 1)
+        : [...items].reverse().find((el) => pos(el) < left - 1);
+      if (!target) return;
+      const x = dir > 0 ? pos(target) : pos(target) + target.offsetWidth - track.clientWidth;
+      track.scrollTo({ left: Math.max(0, x), behavior: reduced ? 'auto' : 'smooth' });
+    };
+
+    track.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') { e.preventDefault(); go(e.key === 'ArrowRight' ? 1 : -1); }
+    });
+    prev.addEventListener('click', () => go(-1));
+    next.addEventListener('click', () => go(1));
+    track.addEventListener('scroll', queue, { passive: true });
+    new ResizeObserver(queue).observe(track);
+    track.querySelectorAll('img').forEach((img) => img.addEventListener('load', queue)); // largeur connue au chargement
+    update();
+  });
+</script>

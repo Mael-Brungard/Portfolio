@@ -34,7 +34,7 @@ document.addEventListener('click', (e) => {
   leave(() => (location.href = url.href));
 });
 
-/* 3b ─ hauteur de l'en-tête sticky (pour coller la barre d'ancres dessous) */
+/* 3a ─ hauteur de l'en-tête sticky (pour coller la barre d'ancres dessous) */
 const header = document.querySelector('header');
 if (header) {
   const setH = () => root.style.setProperty('--header-h', `${header.offsetHeight}px`);
@@ -42,7 +42,7 @@ if (header) {
   setH();
 }
 
-/* 3c ─ barre d'ancres : état actif mis à jour au scroll ET au clic, indicateur qui coulisse */
+/* 3b ─ barre d'ancres : état actif mis à jour au scroll ET au clic, indicateur qui coulisse */
 document.querySelectorAll<HTMLElement>('[data-spy]').forEach((nav) => {
   const links = [...nav.querySelectorAll<HTMLAnchorElement>('a[data-target]')];
   const sections = links.map((l) => document.getElementById(l.dataset.target!)).filter(Boolean) as HTMLElement[];
@@ -81,7 +81,13 @@ document.querySelectorAll<HTMLElement>('[data-spy]').forEach((nav) => {
 
   const unlockSoon = () => { clearTimeout(timer); timer = window.setTimeout(() => { locked = false; compute(); }, 140); };
 
-  addEventListener('scroll', () => { if (locked) unlockSoon(); else requestAnimationFrame(compute); }, { passive: true });
+  let ticking = false; // au plus un calcul par image, même si « scroll » se déclenche plusieurs fois
+  addEventListener('scroll', () => {
+    if (locked) return unlockSoon();
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => { ticking = false; compute(); });
+  }, { passive: true });
 
   links.forEach((l) => l.addEventListener('click', () => {
     set(l.dataset.target!); // retour visuel immédiat, sans attendre la fin du défilement

@@ -24,7 +24,7 @@ export function dumpSeed(db) {
     ['sections', 'id, project_id, tab, title, body, position', 'project_id, tab, position'],
     ['gallery', 'id, project_id, src, alt, position', 'project_id, position'],
   ];
-  const out = ['-- Export automatique de db/portfolio.sqlite (npm run admin / npm run db:dump). Recréer la base : npm run db:seed', 'PRAGMA foreign_keys = ON;', ''];
+  const out = ['-- Export automatique de db/portfolio.sqlite (bun run admin / bun run db:dump). Recréer la base : bun run db:seed', 'PRAGMA foreign_keys = ON;', ''];
   for (const [t, cols, order] of tables) {
     for (const row of db.prepare(`SELECT ${cols} FROM ${t} ORDER BY ${order}`).all())
       out.push(`INSERT INTO ${t}(${cols}) VALUES (${Object.values(row).map(q).join(', ')});`);

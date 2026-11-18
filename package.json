@@ -9,7 +9,8 @@
     "preview": "astro preview",
     "db:seed": "node db/seed.mjs",
     "admin": "node admin/server.mjs",
-    "db:dump": "node db/dump.mjs"
+    "db:dump": "node db/dump.mjs",
+    "images": "node scripts/optimize-images.mjs"
   },
   "dependencies": {
     "@fontsource/cormorant-garamond": "^5.0.0",
@@ -22,9 +23,11 @@
     "three": "^0.170.0"
   },
   "devDependencies": {
-    "@types/three": "^0.170.0"
+    "@types/three": "^0.170.0",
+    "sharp": "^0.35.5"
   },
   "engines": {
     "node": ">=22.13"
-  }
+  },
+  "packageManager": "bun@1.4.2"
 }

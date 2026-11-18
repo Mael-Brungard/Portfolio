@@ -2,9 +2,7 @@
 interface Props { tags: string[]; accent?: string[]; class?: string }
 const { tags, accent = [], class: cls = '' } = Astro.props;
 ---
-<ul class:list={['flex flex-wrap items-center gap-x-2.5 gap-y-1 font-tag', cls]}>
-  {tags.map((t, i) => (<>
-    {i > 0 && <li aria-hidden="true" class="size-[0.3125rem] rounded-full bg-secondaire"></li>}
-    <li class={accent.includes(t) ? 'text-tonique' : ''}>{t}</li>
-  </>))}
+<!-- Le point séparateur est un pseudo-élément (tag-list, global.css) : moins de nœuds DOM, rien de lu par les lecteurs d'écran -->
+<ul class:list={['tag-list flex flex-wrap items-center gap-x-2.5 gap-y-1 font-tag', cls]}>
+  {tags.map((t) => <li class={accent.includes(t) ? 'text-tonique' : ''}>{t}</li>)}
 </ul>

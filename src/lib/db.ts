@@ -1,7 +1,7 @@
 /**
  * Accès à la base SQLite des projets (db/portfolio.sqlite).
  * Utilisé UNIQUEMENT au build (frontmatter Astro) : le site publié reste 100 % statique.
- * Modifier un projet = modifier la base (DB Browser for SQLite, ou db/seed.sql + npm run db:seed) puis rebuild.
+ * Modifier un projet = modifier la base (DB Browser for SQLite, ou db/seed.sql + bun run db:seed) puis rebuild.
  */
 import { existsSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
@@ -62,7 +62,14 @@ function load() {
 
     cache = {
       projects,
-      skills: (db.prepare('SELECT name FROM skills WHERE filterable = 1 ORDER BY position').all() as any[]).map((s) => s.name),
+      // Filtres « Skills » : uniquement les compétences utilisées (carte OU fiche) par au moins un projet publié
+      skills: (db.prepare(
+        `SELECT s.name FROM skills s
+          WHERE s.filterable = 1 AND EXISTS (
+            SELECT 1 FROM project_skills ps JOIN projects p ON p.id = ps.project_id
+             WHERE ps.skill_id = s.id AND p.published = 1)
+          ORDER BY s.position`,
+      ).all() as any[]).map((s) => s.name),
       contexts: db.prepare('SELECT id, label FROM contexts ORDER BY position').all() as { id: string; label: string }[],
     };
     return cache;

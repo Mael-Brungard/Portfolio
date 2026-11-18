@@ -1,7 +1,7 @@
 ---
-import '@fontsource/emblema-one/400.css';
-import '@fontsource/inter/400.css';
-import '@fontsource/cormorant-garamond/500.css';
+import '@fontsource/emblema-one/latin-400.css';
+import '@fontsource/inter/latin-400.css';
+import '@fontsource/cormorant-garamond/latin-500.css';
 import '../styles/global.css';
 import { nav } from '../data/content';
 ---
@@ -17,12 +17,12 @@ import { nav } from '../data/content';
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <noscript><meta http-equiv="refresh" content="0;url=/accueil" /></noscript>
     <!-- Mobile / tactile / « Version 2D » choisie (mémorisée en session) : pas de scène 3D → site 2D.
-         /?3d efface ce choix. -->
+         /?3d (bouton « Version 3D ») efface ce choix et force la 3D, sans test d'appareil : c'est un choix explicite. -->
     <script is:inline>
       (function () {
+        if (new URLSearchParams(location.search).has('3d')) { try { sessionStorage.removeItem('flat'); } catch (e) {} return; }
         var flat = false;
-        if (new URLSearchParams(location.search).has('3d')) { try { sessionStorage.removeItem('flat'); } catch (e) {} }
-        else { try { flat = sessionStorage.getItem('flat') === '1'; } catch (e) {} }
+        try { flat = sessionStorage.getItem('flat') === '1'; } catch (e) {}
         if (flat || !matchMedia('(min-width:1024px) and (hover:hover) and (pointer:fine)').matches) location.replace('/accueil');
       })();
     </script>

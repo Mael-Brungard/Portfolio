@@ -4,7 +4,7 @@
 interface Props { items: { id: string; label: string }[]; label: string }
 const { items, label } = Astro.props;
 ---
-<nav aria-label={label} data-spy class="sticky top-[var(--header-h,4.9rem)] z-30 -mx-5 mb-8 mt-6 flex gap-3 overflow-x-auto bg-dominant/85 px-5 py-3 backdrop-blur-md lg:mx-0 lg:overflow-visible lg:px-0">
+<nav aria-label={label} data-spy class="sticky top-[var(--header-h,4.9rem)] z-30 -mx-5 mb-8 mt-6 flex gap-3 overflow-x-auto px-5 py-3 lg:mx-0 lg:overflow-visible lg:px-0">
   <span data-indicator aria-hidden="true" class="gradient-gold pointer-events-none absolute left-0 top-0 z-0 hidden border border-tonique shadow-[0_0_18px_rgba(230,194,128,.35)]"></span>
   {items.map((i, n) => <a href={`#${i.id}`} data-target={i.id} aria-current={n === 0 ? 'true' : undefined} class="snav">{i.label}</a>)}
 </nav>
